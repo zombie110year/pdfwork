@@ -21,16 +21,16 @@ print(sys.path)
 
 # -- Project information -----------------------------------------------------
 
-project = ''
-name_en = ''
-filename = name_en.replace(' ', '_')
-copyright = ''
+project = 'Pdf Work'
+name_en = project
+filename = name_en.lower().replace(' ', '_')
+copyright = '2019, Zombie110year'
 author = 'Zombie110year'
 
 # The short X.Y version
 version = '0.0'
 # The full version, including alpha/beta/rc tags
-release = '0.0.0rc0'
+release = '0.0.1rc0'
 
 
 # -- General configuration ---------------------------------------------------
