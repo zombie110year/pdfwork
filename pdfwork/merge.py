@@ -6,7 +6,7 @@ from argparse import Action, ArgumentParser, _copy_items
 from pathlib import Path
 
 import PyPDF2 as pdf
-
+from .utils import SetFilePathAction
 
 class AppendInputAction(Action):
     def __init__(
@@ -51,37 +51,6 @@ class AppendInputAction(Action):
         setattr(namespace, self.dest, items)
 
 
-class SetOutputAction(Action):
-    def __init__(
-        self,
-        option_strings,
-        dest,
-        nargs=None,
-        const=None,
-        default=None,
-        type=None,
-        choices=None,
-        required=False,
-        help=None,
-        metavar=None
-    ):
-        super(SetOutputAction, self).__init__(
-            option_strings=option_strings,
-            dest=dest,
-            nargs=nargs,
-            const=const,
-            default=default,
-            type=type,
-            choices=choices,
-            required=required,
-            help=help,
-            metavar=metavar)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        path = Path(values)
-        setattr(namespace, self.dest, path)
-
-
 def _get_parser():
     """
 
@@ -104,9 +73,9 @@ def _get_parser():
     )
 
     parser.add_argument(
-        '-o', '--output', type=str, default=Path('merged.pdf'),
+        '-o', '--output', default=Path('merged.pdf'),
         metavar='example.pdf', help='合并输出到 PDF 文件',
-        action=SetOutputAction
+        action=SetFilePathAction
     )
 
     parser.add_argument(
@@ -134,6 +103,7 @@ def merge(args):
 
     with args.output.open("wb") as file:
         writer.write(file)
+
 
 def main():
     parser = _get_parser()
