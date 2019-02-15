@@ -11,7 +11,7 @@ class TestParser(t.TestCase):
     def setUpClass(cls):
         cls.parser = _get_parser()
 
-    
+
     def test_set_input(self):
         args = self.parser.parse_args(
             ['-i', 'test.pdf', '100']
