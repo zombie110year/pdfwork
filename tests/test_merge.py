@@ -1,6 +1,10 @@
-from pdfwork.merge import _get_parser
+from pdfwork.merge import _get_parser, merge
 import unittest as t
 from pathlib import Path
+from hashlib import md5
+
+class NameSpace:
+    pass
 
 class TestParser(t.TestCase):
     @classmethod
@@ -67,3 +71,32 @@ class TestParser(t.TestCase):
     @t.skip('argparse 没有在选项缺失时抛出错误, 而是使用 sys.exit, 测试方法未知')
     def test_required_intput_setting(self):
         args = self.parser.parse_args([])
+
+class TestMergePDF(t.TestCase):
+    def setUp(self):
+        self.file = Path(__file__).parent / "origin.pdf"
+        self.target = Path(__file__).parent / "merged.pdf"
+
+    def test_merge_file(self):
+        check = Path(__file__).parent / "check.pdf"
+        conf = NameSpace()
+
+        conf.files = [
+            (self.file, 10)
+        ]
+
+        conf.output = self.target
+
+        merge(conf)
+
+        x = md5(); y = md5()
+
+        with check.open("rb") as file:
+            x.update(file.read())
+
+        with self.target.open("rb") as file:
+            y.update(file.read())
+
+        self.assertEqual(
+            x.hexdigest(), y.hexdigest()
+        )

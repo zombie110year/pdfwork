@@ -83,6 +83,21 @@ class SetOutputAction(Action):
 
 
 def _get_parser():
+    """
+
+    :return: conf
+
+        .. data:: conf
+
+            .. attribute:: files
+
+                ``files = [(Path('file1.pdf'), int(repeat_number)), ...]``
+
+            .. attribute:: output
+
+                ``output = Path("Output.pdf")``
+
+    """
     parser = ArgumentParser(
         prog='pdf-merge',
         description='合并多个 PDF 文件',
@@ -110,11 +125,13 @@ def merge(args):
     # 空白页
     writer = pdf.PdfFileWriter()
     for path, repeat in args.files:
-        with path.open('rb') as file:
-            reader = pdf.PdfFileReader(file)
-            for i in range(repeat):
-                writer.appendPagesFromReader(reader)
-                reader.stream.seek(0)
+        reader = pdf.PdfFileReader(str(path.absolute()))
+
+        # pages = [reader.getPage(i) for i in range(reader.getNumPages())]
+
+        for i in range(repeat):
+            writer.appendPagesFromReader(reader)
+
     with args.output.open("wb") as file:
         writer.write(file)
 

@@ -56,7 +56,7 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     url=URL,
-    packages=['pdfwork'],
+    packages=['pdfwork', 'tests'],
     classifiers=CLASSIFIERS,
     keywords=KEYWORDS,
     platforms=PLATFORMS,

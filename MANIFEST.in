@@ -1,0 +1,2 @@
+include tests/origin.pdf
+include tests/check.pdf
