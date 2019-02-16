@@ -8,10 +8,10 @@ EMAIL = "zombie110year@outlook.com"
 URL = "https://github.com/zombie110year/pdfwork"
 
 # * 版本号
-VERSION = "0.0.2"
+VERSION = "0.1.2"
 
 # * 短描述
-DESCRIPTION = ""
+DESCRIPTION = "合并, 提取 PDF 文件"
 
 # * 长描述
 with open("README.md", "rt", encoding="utf-8") as file:
