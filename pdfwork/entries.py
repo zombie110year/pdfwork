@@ -16,7 +16,7 @@ def _get_parser():
         prog="pdfwork", description="处理 PDF 文件",
     )
     tools = parser.add_subparsers(
-        title="sub-cmd", help="子命令"
+        dest="cmd", title="sub-cmd", help="子命令"
     )
 
     merge = tools.add_parser(
@@ -53,3 +53,10 @@ def _get_parser():
 
 def main():
     args = _get_parser().parse_args()
+
+    if args.cmd == 'merge':
+        from .merge import merge
+        merge(args)
+    elif args.cmd == 'extracg':
+        from .extract import extract
+        extract(args)
