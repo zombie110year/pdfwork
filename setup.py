@@ -37,8 +37,7 @@ PLATFORMS = [
 
 ENTRY = {
     'console_scripts': [
-        'pdf-merge = pdfwork.merge:main',
-        'pdf-extract = pdfwork.extract:main',
+        'pdfwork = pdfwork.entries:main'
     ],
 }
 

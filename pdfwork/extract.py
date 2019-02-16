@@ -5,43 +5,12 @@
     pdf-extract origin.pdf -e first.pdf 0-9,13-16,99 -e second.pdf 10-12
 """
 
-from argparse import Action, ArgumentParser, _copy_items
+from argparse import ArgumentParser
 from pathlib import Path
 
 import PyPDF2 as pdf
 
-from .utils import PageNumberParser, SetFilePathAction
-
-
-class ParsePagesAction(Action):
-    """解析 -e 参数, 分析输出文件以及解析页码
-
-    :return: (Path('output.pdf'), [(begin, end), (begin, end), ...])
-    :rtype: (Path, [(int, int)])
-    """
-
-    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None):
-
-        if nargs != 2:
-            raise ValueError("nargs != 2")
-
-        super(ParsePagesAction, self).__init__(option_strings, dest, nargs=nargs, const=const,
-                                               default=default, type=type, choices=choices, required=required, help=help, metavar=metavar)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        items = getattr(namespace, self.dest, [])
-        items = _copy_items(items)
-
-        page_number_parser = PageNumberParser()
-
-        pair = (
-            Path(values[0]),
-            page_number_parser.parse(values[1]),
-        )
-
-        items.append(pair)
-
-        setattr(namespace, self.dest, items)
+from .utils import PageNumberParser, ParsePagesAction, SetFilePathAction
 
 
 def _get_parser():

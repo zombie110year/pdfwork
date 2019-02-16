@@ -1,10 +1,11 @@
-from pdfwork.merge import _get_parser, merge
 import unittest as t
-from pathlib import Path
 from hashlib import md5
+from pathlib import Path
 
-class NameSpace:
-    pass
+from pdfwork.merge import _get_parser, merge
+
+from . import NameSpace
+
 
 class TestParser(t.TestCase):
     @classmethod

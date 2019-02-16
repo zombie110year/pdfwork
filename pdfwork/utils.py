@@ -1,8 +1,49 @@
 """实用工具
 """
 import re
-from argparse import Action
+from argparse import Action, _copy_items
 from pathlib import Path
+class AppendInputAction(Action):
+    def __init__(
+        self,
+        option_strings,
+        dest,
+        nargs=None,
+        const=None,
+        default=None,
+        type=None,
+        choices=None,
+        required=False,
+        help=None,
+        metavar=None
+    ):
+        if nargs != 2:
+            raise ValueError("nargs != 2")
+
+        super(AppendInputAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=nargs,
+            const=const,
+            default=default,
+            type=type,
+            choices=choices,
+            required=required,
+            help=help,
+            metavar=metavar)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest, None)
+        items = _copy_items(items)
+
+        pair = (
+            Path(values[0]),
+            int(values[1]),
+        )
+
+        items.append(pair)
+
+        setattr(namespace, self.dest, items)
 
 class PageNumberParser:
     """
@@ -41,6 +82,37 @@ class PageNumberParser:
                 raise ValueError("页码参数形式错误!")
 
         return result
+
+class ParsePagesAction(Action):
+    """解析 -e 参数, 分析输出文件以及解析页码
+
+    :return: (Path('output.pdf'), [(begin, end), (begin, end), ...])
+    :rtype: (Path, [(int, int)])
+    """
+
+    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None):
+
+        if nargs != 2:
+            raise ValueError("nargs != 2")
+
+        super(ParsePagesAction, self).__init__(option_strings, dest, nargs=nargs, const=const,
+                                               default=default, type=type, choices=choices, required=required, help=help, metavar=metavar)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest, [])
+        items = _copy_items(items)
+
+        page_number_parser = PageNumberParser()
+
+        pair = (
+            Path(values[0]),
+            page_number_parser.parse(values[1]),
+        )
+
+        items.append(pair)
+
+        setattr(namespace, self.dest, items)
+
 
 class SetFilePathAction(Action):
     """设置输出格式, 得到的 output 参数的类型为 Path
