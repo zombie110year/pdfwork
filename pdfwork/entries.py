@@ -51,8 +51,7 @@ def _get_parser():
 
     return parser
 
-def main():
-    args = _get_parser().parse_args()
+def _main(args):
 
     if args.cmd == 'merge':
         from .merge import merge
@@ -60,3 +59,8 @@ def main():
     elif args.cmd == 'extracg':
         from .extract import extract
         extract(args)
+
+
+def main():
+    args = _get_parser().parse_args()
+    _main(args)

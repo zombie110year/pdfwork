@@ -2,7 +2,7 @@ import unittest as t
 from hashlib import md5
 from pathlib import Path
 
-from pdfwork.merge import _get_parser, merge
+from pdfwork.entries import _get_parser, _main
 
 from . import NameSpace
 
@@ -15,7 +15,7 @@ class TestParser(t.TestCase):
 
     def test_set_input(self):
         args = self.parser.parse_args(
-            ['-i', 'test.pdf', '100']
+            ['merge', '-i', 'test.pdf', '100']
         )
 
         files = args.files
@@ -51,7 +51,7 @@ class TestParser(t.TestCase):
 
     def test_set_output(self):
         args = self.parser.parse_args(
-            ['-i', 'test.pdf', '100', '-o', 'output.pdf']
+            ['merge', '-i', 'test.pdf', '100', '-o', 'output.pdf']
         )
 
         path = args.output
@@ -62,7 +62,7 @@ class TestParser(t.TestCase):
 
     def test_default_output(self):
         args = self.parser.parse_args(
-            ['-i', 'test.pdf', '100']
+            ['merge', '-i', 'test.pdf', '100']
         )
 
         self.assertIsInstance(
@@ -82,13 +82,15 @@ class TestMergePDF(t.TestCase):
         check = Path(__file__).parent / "check.pdf"
         conf = NameSpace()
 
+        conf.cmd = "merge"
+
         conf.files = [
             (self.file, 10)
         ]
 
         conf.output = self.target
 
-        merge(conf)
+        _main(conf)
 
         x = md5(); y = md5()
 

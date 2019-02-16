@@ -2,7 +2,7 @@ import unittest as t
 from pathlib import Path
 from hashlib import md5
 
-from pdfwork.extract import _get_parser, extract
+from pdfwork.entries import _get_parser, _main
 
 from . import NameSpace
 
@@ -14,7 +14,7 @@ class TestParser(t.TestCase):
 
     def test_parse_args(self):
         args = self.parser.parse_args(
-            ['origin.pdf', '-e', 'output.pdf', '10']
+            ['extract', 'origin.pdf', '-e', 'output.pdf', '10']
         )
 
         self.assertEqual(
@@ -31,7 +31,7 @@ class TestParser(t.TestCase):
 
     def test_multi_pages(self):
         args = self.parser.parse_args(
-            ['origin.pdf', '-e', 'output.pdf', '10,20-30,99-300,17']
+            ['extract', 'origin.pdf', '-e', 'output.pdf', '10,20-30,99-300,17']
         )
 
         value = args.extract[0][1]
