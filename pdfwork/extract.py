@@ -39,11 +39,11 @@ def extract(args):
 
     for output, pages in args.extract:
         writer = pdf.PdfFileWriter()
-        begin, end = pages
-        for i in range(begin, end):
-            writer.addPage(
-                reader.getPage(i)
-            )
+        for begin, end in pages:
+            for i in range(begin, end):
+                writer.addPage(
+                    reader.getPage(i)
+                )
         with output.open("wb") as file:
             writer.write(file)
         del writer

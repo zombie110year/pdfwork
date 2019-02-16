@@ -56,7 +56,7 @@ def _main(args):
     if args.cmd == 'merge':
         from .merge import merge
         merge(args)
-    elif args.cmd == 'extracg':
+    elif args.cmd == 'extract':
         from .extract import extract
         extract(args)
 
