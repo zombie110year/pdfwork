@@ -1,6 +1,6 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
-PROJ_NAME = "Pdf Work"
+PROJ_NAME = "pdfwork"
 AUTHOR = "Zombie110year"
 EMAIL = "zombie110year@outlook.com"
 
