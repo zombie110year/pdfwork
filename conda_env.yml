@@ -1,0 +1,6 @@
+name: pdfwork
+channels:
+  - defaults
+dependencies:
+  - pip:
+    - pypdf2==1.26.0
