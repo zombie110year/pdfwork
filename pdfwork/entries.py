@@ -8,7 +8,7 @@ from .utils import (AppendInputAction, PageNumberParser, ParsePagesAction,
 
 TOOLS = {
     'merge',
-    'extract',
+    'split',
 }
 
 def _get_parser():
@@ -34,17 +34,17 @@ def _get_parser():
         action=AppendInputAction
     )
 
-    extract = tools.add_parser(
-        name="extract", description="提取 PDF 的一部分, 输出至目标文件中",
+    split = tools.add_parser(
+        name="split", description="提取 PDF 的一部分, 输出至目标文件中",
     )
 
-    extract.add_argument(
+    split.add_argument(
         "origin", help="原文件", metavar="origin.pdf",
         action=SetFilePathAction
     )
 
-    extract.add_argument(
-        "-e", "--extract", help="输出文件, 以及抽取的页码, 连续页码用 - 间断页码用 ,. 连续页码为闭区间", metavar="exam.pdf 1-19,2,34",
+    split.add_argument(
+        "-s", "--split", help="输出文件, 以及抽取的页码, 连续页码用 - 间断页码用 ,. 连续页码为闭区间", metavar="exam.pdf 1-19,2,34",
         nargs=2, action=ParsePagesAction, required=True
     )
 
@@ -56,9 +56,9 @@ def _main(args):
     if args.cmd == 'merge':
         from .merge import merge
         merge(args)
-    elif args.cmd == 'extract':
-        from .extract import extract
-        extract(args)
+    elif args.cmd == 'split':
+        from .split import split
+        split(args)
 
 
 def main():

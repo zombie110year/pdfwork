@@ -13,7 +13,7 @@ class TestArgSend(t.TestCase):
     @t.skip("--help 参数是通过 sys.exit() 退出的")
     def test_send_help(self):
         args = self.parser.parse_args(
-            ['extract', '--help']
+            ['split', '--help']
         )
 
     def test_send_merge(self):
@@ -30,9 +30,9 @@ class TestArgSend(t.TestCase):
         )
 
 
-    def test_send_extract(self):
+    def test_send_split(self):
         args = self.parser.parse_args(
-            ['extract', 'origin.pdf', '-e', 'first.pdf', '1,3,5']
+            ['split', 'origin.pdf', '-s', 'first.pdf', '1,3,5']
         )
 
         self.assertEqual(
@@ -40,7 +40,7 @@ class TestArgSend(t.TestCase):
         )
 
         self.assertEqual(
-            args.extract,
+            args.split,
             [
                 (Path('first.pdf'), [(1,2), (3,4), (5,6)])
             ]

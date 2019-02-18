@@ -10,13 +10,13 @@ from pathlib import Path
 import PyPDF2 as pdf
 
 
-def extract(args):
-    """提取 PDF 内容
+def split(args):
+    """分割 PDF 文件
     """
 
     reader = pdf.PdfFileReader(str(args.origin.absolute()))
 
-    for output, pages in args.extract:
+    for output, pages in args.split:
         writer = pdf.PdfFileWriter()
         for begin, end in pages:
             for i in range(begin, end):

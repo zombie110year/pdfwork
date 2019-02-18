@@ -14,7 +14,7 @@ class TestParser(t.TestCase):
 
     def test_parse_args(self):
         args = self.parser.parse_args(
-            ['extract', 'origin.pdf', '-e', 'output.pdf', '10']
+            ['split', 'origin.pdf', '-s', 'output.pdf', '10']
         )
 
         self.assertEqual(
@@ -22,19 +22,19 @@ class TestParser(t.TestCase):
         )
 
         self.assertEqual(
-            args.extract[0][0], Path('output.pdf')
+            args.split[0][0], Path('output.pdf')
         )
 
         self.assertEqual(
-            args.extract[0][1], [(10, 11)]
+            args.split[0][1], [(10, 11)]
         )
 
     def test_multi_pages(self):
         args = self.parser.parse_args(
-            ['extract', 'origin.pdf', '-e', 'output.pdf', '10,20-30,99-300,17']
+            ['split', 'origin.pdf', '-s', 'output.pdf', '10,20-30,99-300,17']
         )
 
-        value = args.extract[0][1]
+        value = args.split[0][1]
 
         self.assertEqual(
             value, [
