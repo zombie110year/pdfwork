@@ -35,7 +35,7 @@ def _get_parser():
     )
 
     split = tools.add_parser(
-        name="split", description="提取 PDF 的一部分, 输出至目标文件中",
+        name="split", description="将 PDF 分割为不同部分, 输出至目标文件中",
     )
 
     split.add_argument(
