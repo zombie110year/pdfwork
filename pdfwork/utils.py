@@ -58,7 +58,7 @@ class PageNumberParser:
     def parse(self, sentence: str):
         """解析形如 "1-2,3-4, 5" 的字符串
 
-        "1-2,3-4" -> [(1, 3), (3, 5), (5, 6)]
+        "1-2,3-4,5" -> [(1, 3), (3, 5), (5, 6)]
 
         :param str sentence: 形如 "1-2,3-4" 这样的字符串
         :return: [(begin, end), (begin, end), ...]
