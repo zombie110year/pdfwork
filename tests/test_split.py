@@ -4,7 +4,8 @@ from hashlib import md5
 
 from pdfwork.entries import _get_parser, _main
 
-from . import NameSpace
+class NameSpace:
+    pass
 
 
 class TestParser(t.TestCase):

@@ -116,5 +116,4 @@ dmypy.json
 
 # custom
 
-.vscode
 tests/merged.pdf

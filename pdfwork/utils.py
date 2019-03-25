@@ -3,6 +3,8 @@
 import re
 from argparse import Action, _copy_items
 from pathlib import Path
+
+
 class AppendInputAction(Action):
     def __init__(
         self,
@@ -45,6 +47,11 @@ class AppendInputAction(Action):
 
         setattr(namespace, self.dest, items)
 
+
+class PageNumberError(ValueError):
+    pass
+
+
 class PageNumberParser:
     """
     将形如 "0-9,12-16" 这样的字符串, 解析为多个 (begin, end) 对.
@@ -58,7 +65,7 @@ class PageNumberParser:
     def parse(self, sentence: str):
         """解析形如 "1-2,3-4, 5" 的字符串
 
-        "1-2,3-4" -> [(1, 3), (3, 5), (5, 6)]
+        "1-2,3-4,5" -> [(1, 3), (3, 5), (5, 6)]
 
         :param str sentence: 形如 "1-2,3-4" 这样的字符串
         :return: [(begin, end), (begin, end), ...]
@@ -75,13 +82,15 @@ class PageNumberParser:
                 begin = int(begin)
                 end = int(end)
                 if begin > end:
-                    raise ValueError("连续页码中起始值不能超过终止值 {}-{}".format(begin, end))
+                    raise PageNumberError(
+                        "连续页码中起始值不能超过终止值 {}-{}".format(begin, end))
                 else:
                     result.append((begin, end + 1))
             else:
-                raise ValueError("页码参数形式错误!")
+                raise PageNumberError("页码参数形式错误!")
 
         return result
+
 
 class ParsePagesAction(Action):
     """解析 -e 参数, 分析输出文件以及解析页码

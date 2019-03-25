@@ -3,7 +3,8 @@ from pathlib import Path
 
 from pdfwork.entries import _get_parser
 
-from . import NameSpace
+class NameSpace:
+    pass
 
 
 class TestArgSend(t.TestCase):
