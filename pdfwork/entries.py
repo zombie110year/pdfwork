@@ -1,4 +1,4 @@
-from argparse import REMAINDER, ArgumentParser
+from argparse import REMAINDER, SUPPRESS, ArgumentParser
 from pathlib import Path
 
 import PyPDF2 as pdf
@@ -9,6 +9,7 @@ from .utils import (AppendInputAction, PageNumberParser, ParsePagesAction,
 TOOLS = {
     'merge',
     'split',
+    'tag',
 }
 
 def _get_parser():
@@ -48,6 +49,25 @@ def _get_parser():
         nargs=2, action=ParsePagesAction, required=True
     )
 
+    tag = tools.add_parser(
+        "tag", description="导入或导出 PDF 文件中的书签"
+    )
+
+    tag.add_argument(
+        "filepath", action=SetFilePathAction, description="将要操作的 PDF 文件路径"
+    )
+
+    tag.add_argument(
+        "--tagfile", action=SetFilePathAction, description="指定 tagfile"
+    )
+
+    tag.add_argument(
+        "--offset", type=int, description="设置页码偏移量"
+    )
+
+    tag.add_argument(
+        "--export", action="store_true", description="将书签导出"
+    )
 
     return parser
 
@@ -59,6 +79,9 @@ def _main(args):
     elif args.cmd == 'split':
         from .split import split
         split(args)
+    elif args.cmd == 'tag':
+        from .tag import tag
+        tag(args)
 
 
 def main():
