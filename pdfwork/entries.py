@@ -54,19 +54,19 @@ def _get_parser():
     )
 
     tag.add_argument(
-        "filepath", action=SetFilePathAction, description="将要操作的 PDF 文件路径"
+        "pdfpath", action=SetFilePathAction, help="将要操作的 PDF 文件路径"
     )
 
     tag.add_argument(
-        "--tagfile", action=SetFilePathAction, description="指定 tagfile"
+        "--tagfile", action=SetFilePathAction, help="指定 tagfile"
     )
 
     tag.add_argument(
-        "--offset", type=int, description="设置页码偏移量"
+        "--offset", type=int, help="设置页码偏移量", default=0
     )
 
     tag.add_argument(
-        "--export", action="store_true", description="将书签导出"
+        "--export", action="store_true", help="将书签导出"
     )
 
     return parser

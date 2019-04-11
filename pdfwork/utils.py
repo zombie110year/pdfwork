@@ -155,3 +155,14 @@ class SetFilePathAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
         path = Path(values)
         setattr(namespace, self.dest, path)
+
+
+class PositiveIndexList(list):
+    """当 index 小于 0 时, 返回值总是 None
+    """
+
+    def __getitem__(self, index):
+        if index < 0:
+            return None
+        else:
+            return super().__getitem__(index)
