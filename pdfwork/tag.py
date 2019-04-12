@@ -9,10 +9,10 @@ from PyPDF2 import PdfFileReader, PdfFileWriter
 from .utils import PositiveIndexList
 
 # 定义 tagfile 文法 begin
-TAG = re.compile(r"^( )*([^\s][\S ]+?)( *@ *)(\d+?)(?: *)$")
+TAG = re.compile(r"^( *)([^\s][\S ]+?)( *@ *)(\d+?)(?: *)$")
 TAG_NAME = re.compile(r"([^\s][\S ]+?)(?: *@)")
 TAG_PAGE = re.compile(r"(?:@ *)(\d+?)(?: *)$")
-TAG_INDENT = re.compile(r"^( )*")
+TAG_INDENT = re.compile(r"^( *)")
 
 tag_check = lambda x: True if TAG.match(x) else False
 
@@ -43,9 +43,9 @@ def import_tag(pdfpath: Path, tagfile: Path, offset: int):
     :param offset: 设置页码偏移量, 在对每一个页码操作时, 将会加上此量
     """
     file = PdfFileWriter()
-    with pdfpath.open("rb") as reader:
-        _ = PdfFileReader(reader)
-        file.cloneDocumentFromReader(_)
+    _ = PdfFileReader(str(pdfpath.absolute()))
+    file.appendPagesFromReader(_)
+
     taginfos = _yield_taginfo_from_txt(tagfile)
 
     file = _write_taginfo_to_pdfwriter(file, taginfos, offset)
