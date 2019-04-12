@@ -1,2 +1,4 @@
 include tests/origin.pdf
 include tests/check.pdf
+include tests/check_one_page.pdf
+include tests/tagfile_test.txt

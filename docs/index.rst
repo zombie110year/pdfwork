@@ -64,6 +64,11 @@ tagfile 是用于定义 PDF 书签的文件. 其由多个书签条目组成,
 另外使用 **缩进** 来设置书签的层级关系. 多一层缩进,
 代表了此缩进下的书签条目是上一缩进条目的子条目.
 
+例如
+
+.. literalinclude:: ../tests/tagfile_test.txt
+    :linoes:
+
 .. important:: 缩进只能使用 4 个空格, 不能使用 TAB!
 
 offset

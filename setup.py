@@ -8,7 +8,7 @@ EMAIL = "zombie110year@outlook.com"
 URL = "https://github.com/zombie110year/pdfwork"
 
 # * 版本号
-VERSION = "0.1.2"
+VERSION = "0.2.2"
 
 # * 短描述
 DESCRIPTION = "合并, 提取 PDF 文件"
