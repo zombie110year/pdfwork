@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/debug.py",
             "console": "integratedTerminal",
-            "args": ["tag", "--tagfile", "tests/tagfile_test.txt", "tests/merged.pdf"]
+            "args": ["tag", "--tagfile", "tests/tagfile_export_test.txt", "tests/merged.pdf", "--export"]
         },
         {
             "name": "Python: Remote Attach",

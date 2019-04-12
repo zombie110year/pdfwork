@@ -63,13 +63,9 @@ def export_tag(pdfpath: Path, tagfile: Path):
     :param pdfpath: PDF 文件路径
     :param tagfile:  将 taginfo 输出至 tagfile
     """
-    with pdfpath.open("rb") as reader:
-        file = PdfFileReader(reader)
-
-
 
     with tagfile.open("wb") as writer:
-        writer.write(b'')
+        writer.write('非常抱歉, 此功能暂未实现'.encode("utf-8"))
 
 def _yield_taginfo_from_txt(tagfile: Path):
     with tagfile.open("rt", encoding="utf-8") as file:
