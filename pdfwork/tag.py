@@ -14,9 +14,11 @@ TAG_NAME = re.compile(r"([^\s][\S ]+?)(?: *@)")
 TAG_PAGE = re.compile(r"(?:@ *)(\d+?)(?: *)$")
 TAG_INDENT = re.compile(r"^( *)")
 
-tag_check = lambda x: True if TAG.match(x) else False
+
+def tag_check(x): return True if TAG.match(x) else False
 
 # 定义 tagfile 文法 end
+
 
 def tag(args):
     """args 为携带了该功能将使用的参数的命名空间
@@ -32,6 +34,7 @@ def tag(args):
         export_tag(args.pdfpath.resolve(), args.tagfile.resolve())
     else:
         import_tag(args.pdfpath.resolve(), args.tagfile.resolve(), args.offset)
+
 
 def import_tag(pdfpath: Path, tagfile: Path, offset: int):
     """导入书签
@@ -55,6 +58,7 @@ def import_tag(pdfpath: Path, tagfile: Path, offset: int):
     with pdfpath.open("wb") as writer:
         file.write(writer)
 
+
 def export_tag(pdfpath: Path, tagfile: Path):
     """导出书签
 
@@ -66,6 +70,7 @@ def export_tag(pdfpath: Path, tagfile: Path):
 
     with tagfile.open("wb") as writer:
         writer.write('非常抱歉, 此功能暂未实现'.encode("utf-8"))
+
 
 def _yield_taginfo_from_txt(tagfile: Path):
     with tagfile.open("rt", encoding="utf-8") as file:
@@ -90,21 +95,23 @@ def _write_taginfo_to_pdfwriter(writer: PdfFileWriter, taginfos, offset: int, st
     :return: 返回被修改的 writer
     """
     last_indent = 0
-
+    # addBookmark(name, pagenum, parent=None, color=None, bold=None, italic=None, fit="/Fit", *args)
     name, page, indent = next(taginfos)
-    stack.append(writer.addBookmark(name, page + offset, fit="/FitB"))
+    stack.append(writer.addBookmark(name, page + offset,
+                                    None, None, False, False, "/FitH", None))
 
     for name, page, indent in taginfos:
         if indent == last_indent:
-            stack[-1] = writer.addBookmark(name, page + offset, parent=stack[-2])
+            stack[-1] = writer.addBookmark(name, page + offset,
+                                           stack[-2], None, False, False, "/FitH", None)
         elif indent == last_indent + 1:
-            stack.append(writer.addBookmark(name, page + offset, parent=stack[-1]))
+            stack.append(writer.addBookmark(name, page + offset,
+                                            stack[-1], None, False, False, "/FitH", None))
         elif indent < last_indent:
             for i in range(last_indent - indent):
                 stack.pop()
-            stack[-1] = writer.addBookmark(name, page + offset, parent=stack[-2])
-        else:
-            pass
+            stack[-1] = writer.addBookmark(name, page + offset,
+                                           stack[-2], None, False, False, "/FitH", None)
 
         last_indent = indent
 
