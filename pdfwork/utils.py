@@ -162,7 +162,7 @@ class PositiveIndexList(list):
     """
 
     def __getitem__(self, index):
-        if index < 0:
-            return None
-        else:
+        try:
             return super().__getitem__(index)
+        except IndexError:
+            return None

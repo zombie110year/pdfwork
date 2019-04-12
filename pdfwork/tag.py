@@ -29,9 +29,9 @@ def tag(args):
     :param args.export:  指定是导出模式, 或者导入模式
     """
     if args.export:
-        export_tag(args.pdfpath, args.tagfile)
+        export_tag(args.pdfpath.resolve(), args.tagfile.resolve())
     else:
-        import_tag(args.pdfpath, args.tagfile, args.offset)
+        import_tag(args.pdfpath.resolve(), args.tagfile.resolve(), args.offset)
 
 def import_tag(pdfpath: Path, tagfile: Path, offset: int):
     """导入书签
@@ -48,7 +48,9 @@ def import_tag(pdfpath: Path, tagfile: Path, offset: int):
 
     taginfos = _yield_taginfo_from_txt(tagfile)
 
-    file = _write_taginfo_to_pdfwriter(file, taginfos, offset)
+    stack = PositiveIndexList()
+
+    file = _write_taginfo_to_pdfwriter(file, taginfos, offset, stack)
 
     with pdfpath.open("wb") as writer:
         file.write(writer)
@@ -84,15 +86,13 @@ def _yield_taginfo_from_txt(tagfile: Path):
                 raise ValueError("无效的表示法: {}".format(line))
 
 
-def _write_taginfo_to_pdfwriter(writer: PdfFileWriter, taginfos, offset):
+def _write_taginfo_to_pdfwriter(writer: PdfFileWriter, taginfos, offset: int, stack: PositiveIndexList):
     """将 taginfos 中的内容写入 PdfFileWriter 中.
 
     :param writer: 一个 PdfFileWriter 实例
     :param taginfos: 由 :func:`_yield_taginfo_from_txt` 返回的生成器
     :return: 返回被修改的 writer
     """
-
-    stack = PositiveIndexList()
     last_indent = 0
 
     name, page, indent = next(taginfos)
@@ -106,7 +106,7 @@ def _write_taginfo_to_pdfwriter(writer: PdfFileWriter, taginfos, offset):
         elif indent < last_indent:
             for i in range(last_indent - indent):
                 stack.pop()
-            stack.append(writer.addBookmark(name, page + offset, parent=stack[-1]))
+            stack[-1] = writer.addBookmark(name, page + offset, parent=stack[-2])
         else:
             pass
 
