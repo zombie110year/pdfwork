@@ -1,5 +1,10 @@
 from typing import *
+
+from PyPDF2.pdf import PdfFileReader
+from PyPDF2.pdf import PdfFileWriter
+
 from .model import PdfSlice
+from .utils import open_pdf
 
 __all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
 
@@ -99,4 +104,10 @@ def action_erase_outline(pdf: str):
 
     :param str pdf: PDF 文件的路径
     """
-    print(f"{pdf=}")
+    pdfile = open_pdf(pdf)
+    reader = PdfFileReader(pdfile)
+    writer = PdfFileWriter()
+    writer.appendPagesFromReader(reader)
+    with open("out.pdf", "wb") as out:
+        writer.write(out)
+    pdfile.close()
