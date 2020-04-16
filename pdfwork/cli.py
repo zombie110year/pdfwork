@@ -1,6 +1,9 @@
 """PdfWork 的命令行入口
 """
 from argparse import ArgumentParser
+from argparse import Namespace
+from typing import *
+from .actions import *
 
 __all__ = ("cli_main", )
 
@@ -35,3 +38,29 @@ def cli_parser():
     export_outline.add_argument("-o", help="目录信息保存路径，如果为 None，则输出至 stdout", dest="output")
 
     return p
+
+
+class Args(Namespace):
+    opera: str
+    outlinecmd: str
+    input: Optional[str]
+    output: Optional[str]
+    pdf: str
+    offset: int
+
+
+def cli_main():
+    p = cli_parser()
+    args: Args = p.parse_args()
+
+    if args.opera == "merge":
+        action_merge(args.input, args.output)
+    elif args.opera == "split":
+        action_split(args.input, args.output)
+    elif args.opera == "outline":
+        if args.outlinecmd == "import":
+            action_import_outline(args.pdf, args.input, args.offset)
+        elif args.outlinecmd == "export":
+            action_export_outline(args.pdf, args.output)
+        elif args.outlinecmd == "erase":
+            action_erase_outline(args.pdf)

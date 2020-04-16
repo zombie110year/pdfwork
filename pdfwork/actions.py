@@ -1,6 +1,8 @@
 from typing import *
 from .model import PdfSlice
 
+__all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
+
 
 def action_merge(inputs: str, output: Optional[str]):
     """一个合并任务。
@@ -58,11 +60,11 @@ def action_split(input: Optional[str], outputs: str):
     print(f"{input=}, {outputs=}")
 
 
-def action_import_outline(input: Optional[str], pdf: str, offset=0):
+def action_import_outline(pdf: str, input: Optional[str], offset=0):
     """将输入的目录信息导入到 pdf 文件中。
 
-    :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
     :param str pdf: 要导入的 PDF 文件的路径。
+    :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
     :param int offset: 页码的偏移两，默认为 0；这个参数是为了弥补照抄书籍目录页时，
         由于前方页数未计算在内的造成的偏移。
 
