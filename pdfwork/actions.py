@@ -1,4 +1,10 @@
+from io import BytesIO
+from io import StringIO
+import sys
+
 from typing import *
+from PyPDF2.generic import Destination
+from PyPDF2.generic import IndirectObject
 
 from PyPDF2.pdf import PdfFileReader
 from PyPDF2.pdf import PdfFileWriter
@@ -96,7 +102,32 @@ def action_export_outline(pdf: str, output: Optional[str]):
 
     **注意** ： 所有页码都是从 0 开始的
     """
-    print(f"{pdf=}, {output=}")
+    def write_nested_outlines(nested: list, level: int):
+        """访问外部的 outbuf 与 reader 变量。
+        """
+        for l in nested:
+            if isinstance(l, list):
+                write_nested_outlines(l, level + 1)
+            else:
+                l: Destination
+                title = l.get("/Title", "untitled")
+                pagenumber = reader.getDestinationPageNumber(l)
+                outbuf.write("\t" * level)
+                outbuf.write(f"{title}")
+                outbuf.write(" @ ")
+                outbuf.write(f"{pagenumber}")
+                outbuf.write("\n")
+
+    pdfile = open_pdf(pdf)
+    reader = PdfFileReader(pdfile)
+    outline = reader.getOutlines()
+    if output is not None:
+        with open(output, "wt", encoding="utf-8") as outbuf:
+            write_nested_outlines(outline, 0)
+    else:
+        output = sys.stdout
+        write_nested_outlines(outline, 0)
+    pdfile.close()
 
 
 def action_erase_outline(pdf: str):
