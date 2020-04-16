@@ -24,6 +24,9 @@ class PageRange(Iterable[int]):
     :param str r: 用字符串表示的范围，闭区间
     :param Optional[int] max: 最大的迭代值，如果设置为 None 则为无限
 
+    可以对其进行迭代，得到页码范围内的每一位数字；
+    也可以计算它的长度，如果无限长，会抛出 :exc:`InfiniteInteger` 异常。
+
     >>> pr = PageRange("-3,16-17,200-")
     >>> next(pr)
     0
@@ -96,6 +99,13 @@ class PageRange(Iterable[int]):
                         i += 1
 
     def __len__(self) -> int:
+        return self.get_length()
+
+    def get_length(self) -> int:
+        """计算长度
+
+        :exc InfiniteInteger: 当此页码范围拥有无限的长度时。
+        """
         length = 0
         for pat in self.ranges:
             if isinstance(pat, int):
