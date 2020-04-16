@@ -48,9 +48,14 @@ def action_merge(inputs: str, output: Optional[str]):
         for p in pdfs:
             pdfw.addPage(p)
     if output is None:
-        pdfout = fdopen(sys.stdout.fileno(), "wb")
+        pdfout = BytesIO()
         pdfw.write(pdfout)
+        pdfout.seek(0, 0)
+        content = pdfout.read()
         pdfout.close()
+        bstdout = fdopen(sys.stdout.fileno(), "wb")
+        bstdout.write(content)
+        bstdout.close()
     else:
         with open(output, "wb") as pdfout:
             pdfw.write(pdfout)
