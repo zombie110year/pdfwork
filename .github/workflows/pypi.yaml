@@ -1,0 +1,26 @@
+name: PdfWork 的测试、构建、发布
+
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    publish:
+        runs-on: windows-latest
+        steps:
+            -   uses: actions/checkout@v2
+            -   name: Setup Python36
+                uses: actions/setup-python@v1
+                with:
+                    python-version: 3.6
+            -   name: install dependencies
+                run: |
+                    python -m pip install poetry
+                    poetry install
+            -   name: test with pytest
+                run: poetry run pytest tests
+            -   name: build
+                run: poetry build
+            -   name: publish to pypi
+                run: poetry publish -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }}
