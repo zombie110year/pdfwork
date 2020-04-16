@@ -49,11 +49,13 @@ def export_outline(pdf: BytesIO) -> list:
 def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
     """将 outlines 导入到 pdf 中。
     outlines 的三个字段分别是 (缩进，标题，页码)
+
+    **注意** ： 当输入的标签等级并非从 0 开始时，高于最初等级的书签将会丢失。
     """
-    parents: List[Optional[Destination]] = [None]
 
     # 第一次
     level, title, pn = outlines[0]
+    parents: List[Optional[Destination]] = [None] * 16
     lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/Fit")
     lastone = (level, title, pn)
 
@@ -61,11 +63,7 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
         level, title, pn = outline
 
         if level > lastone[0]:
-            parents.append(lastobj)
-        elif level < lastone[0]:
-            diff = lastone[0] - level
-            for i in range(diff):
-                parents.pop()
+            parents[level] = lastobj
 
-        lastobj = pdfw.addBookmark(title, pn, parents[-1], None, False, False, "/Fit")
+        lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/Fit")
         lastone = (level, title, pn)

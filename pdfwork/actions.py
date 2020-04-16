@@ -57,7 +57,7 @@ def action_merge(inputs: str, output: Optional[str]):
                 outlines.append((outline[0], outline[1], outline_pn))
             outline_pn += 1
 
-    # import_outlines()
+    import_outline(pdfw, outlines)
 
     # 输出文件
     if output is None:
@@ -113,10 +113,22 @@ def action_split(input: Optional[str], outputs: str):
     slices = outputs.split("|")
     for sliced in slices:
         pdfw = PdfFileWriter()
+
         path, pages = sliced.split(":")
         pdfs = PdfSlice(pdfin, pages)
+
         for p in pdfs:
             pdfw.addPage(p)
+
+        outlines = []
+        outline_pn = 0
+        for outline in pdfs.iter_outlines():
+            if outline is not None:
+                outlines.append((outline[0], outline[1], outline_pn))
+            outline_pn += 1
+
+        import_outline(pdfw, outlines)
+
         with open(path, "wb") as pdfout:
             pdfw.write(pdfout)
 
