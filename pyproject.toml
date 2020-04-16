@@ -1,8 +1,26 @@
 [tool.poetry]
 name = "pdfwork"
 version = "0.1.0"
-description = ""
+description = "基于 PyPDF2 封装的命令行工具，处理 PDF 文件用"
 authors = ["zombie110year <zombie110year@outlook.com>"]
+readme = "README.rst"
+license = "MIT"
+homepage = "https://github.com/zombie110year/pdfwork"
+repository = "https://github.com/zombie110year/pdfwork.git"
+packages = [
+    { include = "pdfwork" }
+]
+exclude = [
+    "debug.py"
+]
+
+[tool.poetry.scripts]
+pdfwork = "pdfwork.cli:cli_main"
+# alias pw='pdfwork'
+# pw = "pdfwork.cli:cli_main"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/zombie110year/pdfwork/issues"
 
 [tool.poetry.dependencies]
 python = "^3.6"
