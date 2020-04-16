@@ -1,6 +1,10 @@
 from io import BytesIO
 from typing import *
-from functools import lru_cache
+
+from PyPDF2.pdf import Destination
+from PyPDF2.pdf import PdfFileReader
+
+__all__ = ("open_pdf", "export_outline")
 
 
 def open_pdf(path: str) -> BytesIO:
@@ -18,3 +22,24 @@ def open_pdf(path: str) -> BytesIO:
         content = src.read()
     io = BytesIO(content)
     return io
+
+
+def export_outline(pdf: BytesIO) -> list:
+    def get_outlines_from_nested(nested: list, level: int):
+        """访问外部的 outbuf 与 reader 变量。
+        """
+        for l in nested:
+            if isinstance(l, list):
+                get_outlines_from_nested(l, level + 1)
+            else:
+                l: Destination
+                title = l.get("/Title", "untitled")
+                pagenumber = reader.getDestinationPageNumber(l)
+                outlines.append((level, title, pagenumber))
+
+    outlines = []
+    reader = PdfFileReader(pdf)
+    pdfoutlines = reader.getOutlines()
+    get_outlines_from_nested(pdfoutlines, 0)
+
+    return outlines

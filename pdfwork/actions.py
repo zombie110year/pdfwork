@@ -12,6 +12,7 @@ from PyPDF2.pdf import PdfFileWriter
 
 from .model import PdfSlice
 from .utils import open_pdf
+from .utils import export_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
 
@@ -41,12 +42,15 @@ def action_merge(inputs: str, output: Optional[str]):
     """
     pdfw = PdfFileWriter()
     slices = inputs.split("|")
+    # 合并各文件
     for sliced in slices:
         path, pages = sliced.split(":")
         pdfin = open_pdf(path)
         pdfs = PdfSlice(pdfin, pages)
         for p in pdfs:
             pdfw.addPage(p)
+
+    # 输出文件
     if output is None:
         pdfout = BytesIO()
         pdfw.write(pdfout)
@@ -178,32 +182,15 @@ def action_export_outline(pdf: str, output: Optional[str]):
 
     **注意** ： 所有页码都是从 0 开始的
     """
-    def write_nested_outlines(nested: list, level: int):
-        """访问外部的 outbuf 与 reader 变量。
-        """
-        for l in nested:
-            if isinstance(l, list):
-                write_nested_outlines(l, level + 1)
-            else:
-                l: Destination
-                title = l.get("/Title", "untitled")
-                pagenumber = reader.getDestinationPageNumber(l)
-                outbuf.write("\t" * level)
-                outbuf.write(f"{title}")
-                outbuf.write(" @ ")
-                outbuf.write(f"{pagenumber}")
-                outbuf.write("\n")
+    with open_pdf(pdf) as pdfin:
+        outlines = export_outline(pdfin)
 
-    pdfile = open_pdf(pdf)
-    reader = PdfFileReader(pdfile)
-    outline = reader.getOutlines()
+    content = "\n".join(["{}{} @ {}".format("\t" * level, title, pn) for level, title, pn in outlines])
     if output is not None:
         with open(output, "wt", encoding="utf-8") as outbuf:
-            write_nested_outlines(outline, 0)
+            outbuf.write(content)
     else:
-        output = sys.stdout
-        write_nested_outlines(outline, 0)
-    pdfile.close()
+        print(content)
 
 
 def action_erase_outline(pdf: str):
