@@ -13,6 +13,7 @@ from PyPDF2.pdf import PdfFileWriter
 from .model import PdfSlice
 from .utils import open_pdf
 from .utils import export_outline
+from .utils import import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
 
@@ -42,6 +43,8 @@ def action_merge(inputs: str, output: Optional[str]):
     """
     pdfw = PdfFileWriter()
     slices = inputs.split("|")
+    outline_pn = 0
+    outlines = []
     # 合并各文件
     for sliced in slices:
         path, pages = sliced.split(":")
@@ -49,6 +52,12 @@ def action_merge(inputs: str, output: Optional[str]):
         pdfs = PdfSlice(pdfin, pages)
         for p in pdfs:
             pdfw.addPage(p)
+        for outline in pdfs.iter_outlines():
+            if outline is not None:
+                outlines.append((outline[0], outline[1], outline_pn))
+            outline_pn += 1
+
+    # import_outlines()
 
     # 输出文件
     if output is None:
@@ -92,6 +101,7 @@ def action_split(input: Optional[str], outputs: str):
     **注意** ：所有页码都是从 0 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
+    # 获取输入
     if input is None:
         fp = fdopen(sys.stdin.fileno(), "rb")
         pdfin = BytesIO(fp.read())
@@ -99,6 +109,7 @@ def action_split(input: Optional[str], outputs: str):
     else:
         pdfin = open_pdf(input)
 
+    # 输出切片
     slices = outputs.split("|")
     for sliced in slices:
         pdfw = PdfFileWriter()
@@ -130,40 +141,26 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
     else:
         with open(input, "rt", encoding="utf-8") as src:
             outlines = src.read()
-    outlines: List[str] = [
+    raw_outlines: List[str] = [
         l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)
     ]
+    outlines: List[Tuple[int, str, int]] = []
+
+    for o in raw_outlines:
+        parts = o.split("@")
+        pn = int(parts[-1].strip())
+        level = parts[0].count("\t")
+        title = "@".join(parts[:-1]).strip()
+        pat = (level, title, pn - offset - 1)
+        outlines.append(pat)
+    if outlines[0][2] < 0:
+        outlines[0] = (outlines[0][0], outlines[0][1], 0)
 
     pdfile = open_pdf(pdf)
     pdfr = PdfFileReader(pdfile)
     pdfw = PdfFileWriter()
     pdfw.appendPagesFromReader(pdfr)
-
-    parents: List[Optional[Destination]] = [None]
-
-    # 第一次
-    parts = outlines[0].split("@")
-    pagenum = int(parts[-1].strip())
-    level = parts[0].count("\t")
-    title = "@".join(parts[:-1]).strip()
-    lastobj = pdfw.addBookmark(title, pagenum, parents[level], None, False, False, "/FitH", 0)
-    lastone = (level, title, pagenum)
-
-    for outline in outlines[1:]:
-        parts = outline.split("@")
-        pagenum = int(parts[-1].strip())
-        level = parts[0].count("\t")
-        title = "@".join(parts[:-1]).strip()
-
-        if level > lastone[0]:
-            parents.append(lastobj)
-        elif level < lastone[0]:
-            diff = lastone[0] - level
-            for i in range(diff):
-                parents.pop()
-
-        lastobj = pdfw.addBookmark(title, pagenum, parents[-1], None, False, False, "/FitH", 0)
-        lastone = (level, title, pagenum)
+    import_outline(pdfw, outlines)
 
     with open(pdf, "wb") as out:
         pdfw.write(out)
