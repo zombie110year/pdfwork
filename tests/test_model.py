@@ -54,3 +54,30 @@ def test_PageRange_mixed(r, e):
     pr = PageRange(r, max=10)
     for i, j in zip(pr, e):
         assert i == j
+
+
+@pytest.mark.parametrize("r, length", [
+    ("1,3,5,7,9", 5),
+    ("2-7,11", 7),
+    ("-3,5,8", 6),
+])
+def test_PageRange_len0(r, length):
+    assert len(PageRange(r)) == length
+
+
+@pytest.mark.parametrize("r, length", [
+    ("-", 101),
+    ("3,7,98-", 5),
+])
+def test_PageRange_len1(r, length):
+    assert len(PageRange(r, max=100)) == length
+
+
+@pytest.mark.parametrize("r", [
+    "-",
+    "1-",
+    "1,2-",
+])
+def test_PageRange_len2(r):
+    with pytest.raises(InfiniteInteger):
+        len(PageRange(r))

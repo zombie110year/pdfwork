@@ -7,9 +7,13 @@ from typing import *
 from PyPDF2.pdf import PdfFileReader
 from PyPDF2.pdf import PageObject
 
-__all__ = ("PageRange", "PdfSlice")
+__all__ = ("PageRange", "PdfSlice", "InfiniteInteger")
 
 RangePattern = Union[Tuple[Optional[int], Optional[int]], int]
+
+
+class InfiniteInteger(Exception):
+    pass
 
 
 class PageRange(Iterable[int]):
@@ -90,6 +94,29 @@ class PageRange(Iterable[int]):
                     while i <= end:
                         yield i
                         i += 1
+
+    def __len__(self) -> int:
+        length = 0
+        for pat in self.ranges:
+            if isinstance(pat, int):
+                length += 1
+            elif isinstance(pat, tuple):
+                b, e = pat
+                if b is None and e is None:
+                    if self.maxn is None:
+                        raise InfiniteInteger
+                    else:
+                        length += self.maxn + 1
+                elif b is None and e is not None:
+                    length += e + 1
+                elif b is not None and e is None:
+                    if self.maxn is None:
+                        raise InfiniteInteger
+                    else:
+                        length += self.maxn - b + 1
+                else:
+                    length += e - b + 1
+        return length
 
 
 class VirtualPdfSlice:
