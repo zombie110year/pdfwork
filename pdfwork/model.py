@@ -80,7 +80,8 @@ class PageRange(Iterable[int]):
                             i += 1
                 else:
                     i = b if b is not None else 0
-                    while i <= e:
+                    end = min(e, self.maxn) if self.maxn is not None else e
+                    while i <= end:
                         yield i
                         i += 1
 
