@@ -54,7 +54,7 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
 
     # 第一次
     level, title, pn = outlines[0]
-    lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/FitH", 0)
+    lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/Fit")
     lastone = (level, title, pn)
 
     for outline in outlines[1:]:
@@ -67,5 +67,5 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
             for i in range(diff):
                 parents.pop()
 
-        lastobj = pdfw.addBookmark(title, pn, parents[-1], None, False, False, "/FitH", 0)
+        lastobj = pdfw.addBookmark(title, pn, parents[-1], None, False, False, "/Fit")
         lastone = (level, title, pn)

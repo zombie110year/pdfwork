@@ -151,10 +151,8 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
         pn = int(parts[-1].strip())
         level = parts[0].count("\t")
         title = "@".join(parts[:-1]).strip()
-        pat = (level, title, pn - offset - 1)
+        pat = (level, title, pn - offset)
         outlines.append(pat)
-    if outlines[0][2] < 0:
-        outlines[0] = (outlines[0][0], outlines[0][1], 0)
 
     pdfile = open_pdf(pdf)
     pdfr = PdfFileReader(pdfile)
