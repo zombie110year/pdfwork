@@ -2,6 +2,7 @@ import re
 import sys
 from io import BytesIO
 from io import StringIO
+from os import fdopen
 from typing import *
 
 from PyPDF2.generic import Destination
@@ -47,7 +48,9 @@ def action_merge(inputs: str, output: Optional[str]):
         for p in pdfs:
             pdfw.addPage(p)
     if output is None:
-        pdfw.write(sys.stdout)
+        pdfout = fdopen(sys.stdout.fileno(), "wb")
+        pdfw.write(pdfout)
+        pdfout.close()
     else:
         with open(output, "wb") as pdfout:
             pdfw.write(pdfout)
@@ -81,7 +84,9 @@ def action_split(input: Optional[str], outputs: str):
     **注意** ：书签、标记等可能会遗失。
     """
     if input is None:
-        pdfin = BytesIO(sys.stdin.read())
+        fp = fdopen(sys.stdin.fileno(), "rb")
+        pdfin = BytesIO(fp.read())
+        fp.close()
     else:
         pdfin = open_pdf(input)
 
