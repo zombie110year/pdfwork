@@ -23,6 +23,7 @@ def test_PageRange_infinite0():
     for i, j in zip(pr, range(1000)):
         assert i == j
 
+
 def test_PageRange_infinite1():
     pr = PageRange("300-")
     for i, j in zip(pr, range(300, 1000)):
@@ -43,3 +44,13 @@ def test_PageRange_infinite2():
     assert next(it) == 11
     assert next(it) == 300
     assert next(it) == 301
+
+
+@pytest.mark.parametrize("r, e", [
+    ("9,3,6", [9, 3, 6]),
+    ("1-,0", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0]),
+])
+def test_PageRange_mixed(r, e):
+    pr = PageRange(r, max=10)
+    for i, j in zip(pr, e):
+        assert i == j

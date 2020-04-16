@@ -12,6 +12,7 @@ class PageRange(Iterable[int]):
     可以用来表示无穷区间。
 
     :param str r: 用字符串表示的范围，闭区间
+    :param Optional[int] max: 最大的迭代值，如果设置为 None 则为无限
 
     >>> pr = PageRange("-3,16-17,200-")
     >>> next(pr)
@@ -35,8 +36,10 @@ class PageRange(Iterable[int]):
     RE_ITEM = re.compile(r"-|\d+|\d+-|-\d+|\d+-\d+")
     RE_RANGE = re.compile(r"(-|\d+|\d+-|-\d+|\d+-\d+)(,\d+|\d+-|-\d+|\d+-\d+)*")
     ranges: Optional[List[RangePattern]] = None
+    maxn: Optional[int]
 
-    def __init__(self, r: str):
+    def __init__(self, r: str, max=None):
+        self.maxn = max
         if self.RE_RANGE.match(r):
             ranges = (tuple(i.split("-")) for i in (x for x in r.split(",") if x != ""))
             self.ranges = []
@@ -65,23 +68,18 @@ class PageRange(Iterable[int]):
                 yield pat
             elif isinstance(pat, tuple):
                 b, e = pat
-                if b is None and e is None:
-                    i = 0
-                    while True:
-                        yield i
-                        i += 1
-                elif b is None:
-                    i = 0
-                    while i <= e:
-                        yield i
-                        i += 1
-                elif e is None:
-                    i = b
-                    while True:
-                        yield i
-                        i += 1
+                if e is None:
+                    i = b if b is not None else 0
+                    if self.maxn is None:
+                        while True:
+                            yield i
+                            i += 1
+                    else:
+                        while i <= self.maxn:
+                            yield i
+                            i += 1
                 else:
-                    i = b
+                    i = b if b is not None else 0
                     while i <= e:
                         yield i
                         i += 1
