@@ -11,8 +11,7 @@ __all__ = ("open_pdf", "export_outline")
 def open_pdf(path: str) -> BytesIO:
     """将 PDF 文件的内容读入 BytesIO 并返回。
 
-    为什么
-    ======
+    为什么？
 
     相比现代计算机的内存，PDF 文件最大也不过数百 MB，足够使用。
     将其完全读取入内存，能够提高复用效率。
