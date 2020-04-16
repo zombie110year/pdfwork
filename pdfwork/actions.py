@@ -1,11 +1,11 @@
+import re
+import sys
 from io import BytesIO
 from io import StringIO
-import sys
-
 from typing import *
+
 from PyPDF2.generic import Destination
 from PyPDF2.generic import IndirectObject
-
 from PyPDF2.pdf import PdfFileReader
 from PyPDF2.pdf import PdfFileWriter
 
@@ -86,8 +86,46 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
 
     **注意** ： 所有页码都是从 0 开始的
     """
-    print(f"{input=}, {pdf=}, {offset=}")
+    if input is None:
+        outlines = sys.stdin.read()
+    else:
+        with open(input, "rt", encoding="utf-8") as src:
+            outlines = src.read()
+    outlines: List[str] = [l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)]
 
+    pdfile = open_pdf(pdf)
+    pdfr = PdfFileReader(pdfile)
+    pdfw = PdfFileWriter()
+    pdfw.appendPagesFromReader(pdfr)
+
+    parents: List[Optional[Destination]] = [None]
+
+    # 第一次
+    parts = outlines[0].split("@")
+    pagenum = int(parts[-1].strip())
+    level = parts[0].count("\t")
+    title = "@".join(parts[:-1]).strip()
+    lastobj = pdfw.addBookmark(title, pagenum, parents[level], None, False, False, "/FitH", 0)
+    lastone = (level, title, pagenum)
+
+    for outline in outlines[1:]:
+        parts = outline.split("@")
+        pagenum = int(parts[-1].strip())
+        level = parts[0].count("\t")
+        title = "@".join(parts[:-1]).strip()
+
+        if level > lastone[0]:
+            parents.append(lastobj)
+        elif level < lastone[0]:
+            diff = lastone[0] - level
+            for i in range(diff):
+                parents.pop()
+
+        lastobj = pdfw.addBookmark(title, pagenum, parents[-1], None, False, False, "/FitH", 0)
+        lastone = (level, title, pagenum)
+
+    with open(pdf, "wb") as out:
+        pdfw.write(out)
 
 def action_export_outline(pdf: str, output: Optional[str]):
     """将 PDF 文件中的目录信息导出到文本文件中。
