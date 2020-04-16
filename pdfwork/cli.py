@@ -7,6 +7,17 @@ from .actions import *
 
 __all__ = ("cli_main", )
 
+how_to_calculate_offset = """
+计算 offset 的参考意见
+======================
+
+对于大部分 PDF 阅读器，其页码的起点是 1，
+而本程序为 0，当你在书籍的目录页面查找某章节的页码时，
+其起点又是从正文处以 1 开始的。
+
+因此，在计算 offset 时，以正文起点页在 PDF 中所处页码为 n，
+则 offset 为 n - 1。
+"""
 
 def cli_parser():
     p = ArgumentParser("pdfwork", description="manipulate PDFs.")
