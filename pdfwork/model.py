@@ -29,6 +29,19 @@ class PageRange(Iterable[int]):
     可以对其进行迭代，得到页码范围内的每一位数字；
     也可以计算它的长度，如果无限长，会抛出 :exc:`InfiniteInteger` 异常。
 
+    对于一个页码范围，它可以由几个部分组成，每个部分用逗号分隔::
+
+        1,2,3
+
+    在一个部分内，可以用 ``-`` 来表示一个连续的区间（闭区间）::
+
+        1-3     # 1,2,3
+        -3      # 等价于 0-3
+        1-      # 等价于从 1 开始，无穷地向后递增
+        -       # 等价于从 0 开始，无穷地向后递增
+
+    各部分可通过 ``,`` 逗号来进行组合。
+
     >>> pr = PageRange("-3,16-17,200-")
     >>> next(pr)
     0
@@ -49,7 +62,10 @@ class PageRange(Iterable[int]):
     >>> # 无穷...
     """
     RE_ITEM = re.compile(r"-|\d+|\d+-|-\d+|\d+-\d+")
+    "检验每个部分"
     RE_RANGE = re.compile(r"(-|\d+|\d+-|-\d+|\d+-\d+)(,\d+|\d+-|-\d+|\d+-\d+)*")
+    "检验整体表达式"
+
     ranges: Optional[List[RangePattern]] = None
     maxn: Optional[int] = None
 
@@ -106,7 +122,7 @@ class PageRange(Iterable[int]):
     def get_length(self) -> int:
         """计算长度
 
-        :exc InfiniteInteger: 当此页码范围拥有无限的长度时。
+        :raise InfiniteInteger: 当此页码范围拥有无限的长度时。
         """
         length = 0
         for pat in self.ranges:
@@ -162,9 +178,9 @@ class VirtualPdfSlice:
 
 
 class PdfSlice:
-    """一个对应到文件系统的 PDF 片段
+    """一个拥有内容的 PDF 片段
 
-    :param BytesIO pdf: 假设的 PDF 文件路径
+    :param BytesIO pdf: 存储了 PDF 内容的可读缓冲区
     :param str pr: PageRange
     """
     pdf: VirtualPdfSlice
@@ -182,6 +198,8 @@ class PdfSlice:
         return self.iter_pages()
 
     def iter_pages(self) -> Iterator[PageObject]:
+        """依次抛出 PDF 中的各个页面，不包含书签等信息
+        """
         pdfreader = PdfFileReader(self._stream)
         for p in self.pdf.page_range:
             yield pdfreader.getPage(p)

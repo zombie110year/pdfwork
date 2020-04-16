@@ -14,7 +14,7 @@ def open_pdf(path: str) -> BytesIO:
     为什么？
 
     相比现代计算机的内存，PDF 文件最大也不过数百 MB，足够使用。
-    将其完全读取入内存，能够提高复用效率。
+    将其完全读取入内存，能够提高读写效率。
 
     另外，也不需要占用文件句柄（描述符），方便对源文件进行覆写。
     """
@@ -25,6 +25,10 @@ def open_pdf(path: str) -> BytesIO:
 
 
 def export_outline(pdf: BytesIO) -> list:
+    """将 pdf 中的书签导出为一组列表。
+
+    这个列表是非嵌套的，每个元素是一个三元组：（缩进，标题，页码）。
+    """
     def get_outlines_from_nested(nested: list, level: int):
         """访问外部的 outbuf 与 reader 变量。
         """
