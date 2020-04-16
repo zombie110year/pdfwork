@@ -24,7 +24,7 @@ def action_merge(inputs: str, output: Optional[str]):
     :param str inputs: 用字符串表示的输入
     :param Optional[str] output: 输出文件路径，如果为 None 则为 stdout
 
-    一个输入字符串应满足 `<filename>:<page range>|<file2>:<pr 2>` 的形式，如::
+    一个输入字符串应满足 ``<filename>:<page range>|<file2>:<pr 2>`` 的形式，如::
 
         action_merge("example.pdf:1,2,3-|example2.pdf:5,2,4", None)
 
@@ -80,7 +80,7 @@ def action_split(input: Optional[str], outputs: str):
     :param Optional[str] input: 输入文件的路径，如果为 None 则为 stdin
     :param str outputs: 输出文件以及它们所得到的页码
 
-    输出参数应满足 `<filename>:<page range>|<file2>:<pr 2>` 的形式，如::
+    输出参数应满足 ``<filename>:<page range>|<file2>:<pr 2>`` 的形式，如::
 
         action_split("p1.pdf:1,2,3-|p2.pdf:5,2,4")
 
@@ -138,7 +138,7 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
 
     :param str pdf: 要导入的 PDF 文件的路径。
     :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
-    :param int offset: 页码的偏移两，默认为 0；这个参数是为了弥补照抄书籍目录页时，
+    :param int offset: 页码的偏移量，默认为 0；这个参数是为了弥补照抄书籍目录页时，
         由于前方页数未计算在内的造成的偏移。
 
     目录信息将具有以下格式::
