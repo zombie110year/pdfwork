@@ -68,7 +68,20 @@ def action_split(input: Optional[str], outputs: str):
     **注意** ：所有页码都是从 0 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    print(f"{input=}, {outputs=}")
+    if input is None:
+        pdfin = BytesIO(sys.stdin.read())
+    else:
+        pdfin = open_pdf(input)
+
+    slices = outputs.split("|")
+    for sliced in slices:
+        pdfw = PdfFileWriter()
+        path, pages = sliced.split(":")
+        pdfs = PdfSlice(pdfin, pages)
+        for p in pdfs:
+            pdfw.addPage(p)
+        with open(path, "wb") as pdfout:
+            pdfw.write(pdfout)
 
 
 def action_import_outline(pdf: str, input: Optional[str], offset=0):
@@ -91,7 +104,9 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
     else:
         with open(input, "rt", encoding="utf-8") as src:
             outlines = src.read()
-    outlines: List[str] = [l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)]
+    outlines: List[str] = [
+        l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)
+    ]
 
     pdfile = open_pdf(pdf)
     pdfr = PdfFileReader(pdfile)
@@ -126,6 +141,7 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
 
     with open(pdf, "wb") as out:
         pdfw.write(out)
+
 
 def action_export_outline(pdf: str, output: Optional[str]):
     """将 PDF 文件中的目录信息导出到文本文件中。

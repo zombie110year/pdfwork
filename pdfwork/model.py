@@ -42,7 +42,7 @@ class PageRange(Iterable[int]):
     RE_ITEM = re.compile(r"-|\d+|\d+-|-\d+|\d+-\d+")
     RE_RANGE = re.compile(r"(-|\d+|\d+-|-\d+|\d+-\d+)(,\d+|\d+-|-\d+|\d+-\d+)*")
     ranges: Optional[List[RangePattern]] = None
-    maxn: Optional[int]
+    maxn: Optional[int] = None
 
     def __init__(self, r: str, max=None):
         self.maxn = max
@@ -125,23 +125,19 @@ class VirtualPdfSlice:
 class PdfSlice:
     """一个对应到文件系统的 PDF 片段
 
-    :param str pdf: 假设的 PDF 文件路径
+    :param BytesIO pdf: 假设的 PDF 文件路径
     :param str pr: PageRange
     """
     pdf: VirtualPdfSlice
     _stream: BytesIO
 
-    def __init__(self, pdf: str, pr: str):
-        pdfpath = Path(pdf).as_posix()
-        self._stream = open(pdfpath, "rb")
+    def __init__(self, pdf: BytesIO, pr: str):
+        self._stream = pdf
         pdfreader = PdfFileReader(self._stream)
-        self.pdf = VirtualPdfSlice(pdfpath, pr, pdfreader.getNumPages() - 1)
+        self.pdf = VirtualPdfSlice("<memory>", pr, pdfreader.getNumPages() - 1)
 
         self._stream.seek(SEEK_SET, SEEK_SET)
         del pdfreader
-
-    def __del__(self):
-        self._stream.close()
 
     def __iter__(self) -> Iterator[PageObject]:
         return self.iter_pages()
