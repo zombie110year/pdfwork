@@ -7,6 +7,8 @@ from typing import *
 from PyPDF2.pdf import PdfFileReader
 from PyPDF2.pdf import PageObject
 
+from .utils import export_outline
+
 __all__ = ("PageRange", "PdfSlice", "InfiniteInteger")
 
 RangePattern = Union[Tuple[Optional[int], Optional[int]], int]
@@ -183,4 +185,18 @@ class PdfSlice:
         pdfreader = PdfFileReader(self._stream)
         for p in self.pdf.page_range:
             yield pdfreader.getPage(p)
-        self._stream.seek(SEEK_SET, SEEK_SET)
+
+    # (level, title)
+    def iter_outlines(self) -> Iterator[Optional[Tuple[int, str]]]:
+        """迭代页码对应的页面上的书签，同一页的书签只会得到一个。
+        若某个页面没有书签，那么得到 None。
+
+        这是为了与 :meth:`iter_pages` 配合。
+        """
+        outlines = export_outline(self._stream)
+        outline_query = {}
+        for level, title, pn in outlines:
+            outline_query[pn] = (level, title)
+
+        for pn in self.pdf.page_range:
+            yield outline_query.get(pn, None)
