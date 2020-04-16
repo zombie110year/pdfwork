@@ -38,7 +38,19 @@ def action_merge(inputs: str, output: Optional[str]):
     **注意** ：所有页码都是从 0 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    print(f"{inputs=}, {output=}")
+    pdfw = PdfFileWriter()
+    slices = inputs.split("|")
+    for sliced in slices:
+        path, pages = sliced.split(":")
+        pdfin = open_pdf(path)
+        pdfs = PdfSlice(pdfin, pages)
+        for p in pdfs:
+            pdfw.addPage(p)
+    if output is None:
+        pdfw.write(sys.stdout)
+    else:
+        with open(output, "wb") as pdfout:
+            pdfw.write(pdfout)
 
 
 def action_split(input: Optional[str], outputs: str):
