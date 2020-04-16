@@ -1,5 +1,11 @@
-from typing import *
 import re
+from io import SEEK_SET
+from io import BytesIO
+from pathlib import Path
+from typing import *
+
+from PyPDF2.pdf import PdfFileReader
+from PyPDF2.pdf import PageObject
 
 __all__ = ("PageRange", "PdfSlice")
 
@@ -86,6 +92,62 @@ class PageRange(Iterable[int]):
                         i += 1
 
 
-class PdfSlice:
+class VirtualPdfSlice:
+    """一个虚拟的 PDF 片段，不假设在文件系统中存在对应文件
+
+    :param str pdf: 假设的 PDF 文件路径
+    :param str pr: PageRange
+    :param Optional[int] max: 最大页数
+
+    >>> vps = VirtualPdfSlice("<memory>", "2,3,5,7,11-13")
+    >>> vps.view_slice()
+    [
+        "<memory>:2",
+        "<memory>:3",
+        "<memory>:5",
+        "<memory>:7",
+        "<memory>:11",
+        "<memory>:12",
+        "<memory>:13"
+    ]
+    """
     pdf: str
     page_range: PageRange
+
+    def __init__(self, pdf: str, pr: str, max=None):
+        self.pdf = pdf
+        self.page_range = PageRange(pr, max)
+
+    def view_slice(self) -> List[str]:
+        return [f"{self.pdf}:{p}" for p in self.page_range]
+
+
+class PdfSlice:
+    """一个对应到文件系统的 PDF 片段
+
+    :param str pdf: 假设的 PDF 文件路径
+    :param str pr: PageRange
+    """
+    pdf: VirtualPdfSlice
+    _stream: BytesIO
+
+    def __init__(self, pdf: str, pr: str):
+        pdfpath = Path(pdf).as_posix()
+        self._stream = open(pdfpath, "rb")
+        pdfreader = PdfFileReader(self._stream)
+        self.pdf = VirtualPdfSlice(pdfpath, pr, pdfreader.getNumPages() - 1)
+
+        self._stream.seek(SEEK_SET, SEEK_SET)
+        del pdfreader
+
+    def __del__(self):
+        self._stream.close()
+
+    def __iter__(self) -> Iterator[PageObject]:
+        return self.iter_pages()
+
+    def iter_pages(self) -> Iterator[PageObject]:
+        pdfreader = PdfFileReader(self._stream)
+        for p in self.pdf.page_range:
+            yield pdfreader.getPage(p)
+        self._stream.seek(SEEK_SET, SEEK_SET)
