@@ -1,19 +1,15 @@
 import re
 import sys
-from io import BytesIO
-from io import StringIO
+from io import BytesIO, StringIO
 from os import fdopen
 from typing import *
 
-from PyPDF2.generic import Destination
-from PyPDF2.generic import IndirectObject
-from PyPDF2.pdf import PdfFileReader
-from PyPDF2.pdf import PdfFileWriter
+import pikepdf
+from PyPDF2.generic import Destination, IndirectObject
+from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
-from .model import PdfSlice
-from .utils import open_pdf
-from .utils import export_outline
-from .utils import import_outline
+from .model import PageRange, PdfSlice
+from .utils import export_outline, import_outline, open_pdf
 
 __all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
 
@@ -41,37 +37,28 @@ def action_merge(inputs: str, output: Optional[str]):
     **注意** ：所有页码都是从 0 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    pdfw = PdfFileWriter()
+    pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
+
     slices = inputs.split("|")
-    outline_pn = 0
-    outlines = []
     # 合并各文件
     for sliced in slices:
         path, pages = sliced.split(":")
         pdfin = open_pdf(path)
-        pdfs = PdfSlice(pdfin, pages)
-        for p in pdfs:
-            pdfw.addPage(p)
-        for outline in pdfs.iter_outlines():
-            if outline is not None:
-                outlines.append((outline[0], outline[1], outline_pn))
-            outline_pn += 1
+        pdfs: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
 
-    import_outline(pdfw, outlines)
+        pagenums = PageRange(pages).iter_numbers()
+        pn = next(pagenums)
+        for i, p in enumerate(pdfs.pages):
+            if i == pn:
+                pn = next(pagenums)
+                pdfw.pages.append(p)
 
-    # 输出文件
     if output is None:
-        pdfout = BytesIO()
-        pdfw.write(pdfout)
-        pdfout.seek(0, 0)
-        content = pdfout.read()
-        pdfout.close()
-        bstdout = fdopen(sys.stdout.fileno(), "wb")
-        bstdout.write(content)
-        bstdout.close()
+        outbuf = fdopen(sys.stdout.fileno(), "wb")
+        pdfw.save(outbuf)
+        outbuf.close()
     else:
-        with open(output, "wb") as pdfout:
-            pdfw.write(pdfout)
+        pdfw.save(output)
 
 
 def action_split(input: Optional[str], outputs: str):
