@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pdfwork"
-version = "0.1.0"
+version = "0.1.1"
 description = "基于 PyPDF2 封装的命令行工具，处理 PDF 文件用"
 authors = ["zombie110year <zombie110year@outlook.com>"]
 readme = "README.rst"
