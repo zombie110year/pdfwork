@@ -1,11 +1,9 @@
 import re
-from io import SEEK_SET
-from io import BytesIO
+from io import SEEK_SET, BytesIO
 from pathlib import Path
 from typing import *
 
-from PyPDF2.pdf import PdfFileReader
-from PyPDF2.pdf import PageObject
+from PyPDF2.pdf import PageObject, PdfFileReader
 
 from .utils import export_outline
 

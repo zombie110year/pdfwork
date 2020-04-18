@@ -30,6 +30,7 @@ pikepdf = "^1.11.1"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 yapf = "^0.29.0"
+isort = "^4.3.21"
 
 [[tool.poetry.source]]
 url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/simple"

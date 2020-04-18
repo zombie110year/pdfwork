@@ -1,9 +1,7 @@
 from io import BytesIO
 from typing import *
 
-from PyPDF2.pdf import Destination
-from PyPDF2.pdf import PdfFileReader
-from PyPDF2.pdf import PdfFileWriter
+from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
 __all__ = ("open_pdf", "export_outline")
 

@@ -1,5 +1,6 @@
-from pdfwork.model import *
 import pytest
+
+from pdfwork.model import *
 
 
 @pytest.mark.parametrize("r, e", [
