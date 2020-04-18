@@ -96,29 +96,21 @@ def action_split(input: Optional[str], outputs: str):
     else:
         pdfin = open_pdf(input)
 
+    pdfr: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
     # 输出切片
     slices = outputs.split("|")
     for sliced in slices:
-        pdfw = PdfFileWriter()
+        pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
 
         path, pages = sliced.split(":")
-        pdfs = PdfSlice(pdfin, pages)
+        pr = PageRange(pages).iter_numbers()
 
-        for p in pdfs:
-            pdfw.addPage(p)
+        for p in pr:
+            # QPDF 用 1 做索引起始
+            page = pdfr.pages.p(p + 1)
+            pdfw.pages.append(page)
 
-        outlines = []
-        outline_pn = 0
-        for outline in pdfs.iter_outlines():
-            if outline is not None:
-                outlines.append((outline[0], outline[1], outline_pn))
-            outline_pn += 1
-
-        import_outline(pdfw, outlines)
-
-        with open(path, "wb") as pdfout:
-            pdfw.write(pdfout)
-
+        pdfw.save(path)
 
 def action_import_outline(pdf: str, input: Optional[str], offset=0):
     """将输入的目录信息导入到 pdf 文件中。
