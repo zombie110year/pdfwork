@@ -25,6 +25,7 @@ pdfwork = "pdfwork.cli:cli_main"
 [tool.poetry.dependencies]
 python = "^3.6"
 PyPDF2 = "^1.26.0"
+pikepdf = "^1.11.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
