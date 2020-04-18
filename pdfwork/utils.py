@@ -53,6 +53,9 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
     **注意** ： 当输入的标签等级并非从 0 开始时，高于最初等级的书签将会丢失。
     """
 
+    if len(outlines) == 0:
+        return
+
     # 第一次
     level, title, pn = outlines[0]
     parents: List[Optional[Destination]] = [None] * 16
