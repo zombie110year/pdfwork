@@ -3,6 +3,9 @@ from typing import *
 
 from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
+if TYPE_CHECKING:
+    from .outline import OutlineTuple
+
 __all__ = ("open_pdf", "export_outline")
 
 
@@ -34,12 +37,11 @@ def export_outline(pdf: BytesIO) -> list:
             if isinstance(l, list):
                 get_outlines_from_nested(l, level + 1)
             else:
-                l: Destination
                 title = l.get("/Title", "untitled")
                 pagenumber = reader.getDestinationPageNumber(l)
                 outlines.append((level, title, pagenumber))
 
-    outlines = []
+    outlines: List[OutlineTuple] = []
     reader = PdfFileReader(pdf)
     pdfoutlines = reader.getOutlines()
     get_outlines_from_nested(pdfoutlines, 0)
@@ -47,7 +49,7 @@ def export_outline(pdf: BytesIO) -> list:
     return outlines
 
 
-def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
+def import_outline(pdfw: PdfFileWriter, outlines: List[OutlineTuple]):
     """将 outlines 导入到 pdf 中。
     outlines 的三个字段分别是 (缩进，标题，页码)
 
@@ -60,7 +62,8 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
     # 第一次
     level, title, pn = outlines[0]
     parents: List[Optional[Destination]] = [None] * 16
-    lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/Fit")
+    lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False,
+                               "/Fit")
     lastone = (level, title, pn)
 
     for outline in outlines[1:]:
@@ -69,5 +72,6 @@ def import_outline(pdfw: PdfFileWriter, outlines: List[Tuple[int, str, int]]):
         if level > lastone[0]:
             parents[level] = lastobj
 
-        lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False, "/Fit")
+        lastobj = pdfw.addBookmark(title, pn, parents[level], None, False,
+                                   False, "/Fit")
         lastone = (level, title, pn)

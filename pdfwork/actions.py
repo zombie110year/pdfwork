@@ -9,8 +9,8 @@ from PyPDF2.generic import Destination, IndirectObject
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 from .model import PageRange, PdfSlice
-from .utils import export_outline, import_outline, open_pdf
 from .outline import parse_outline
+from .utils import export_outline, import_outline, open_pdf
 
 if TYPE_CHECKING:
     from .outline import OutlineTuple
