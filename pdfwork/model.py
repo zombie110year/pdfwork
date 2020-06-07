@@ -64,7 +64,7 @@ class PageRange(Iterable[int]):
     RE_RANGE = re.compile(r"(-|\d+|\d+-|-\d+|\d+-\d+)(,\d+|\d+-|-\d+|\d+-\d+)*")
     "检验整体表达式"
 
-    ranges: Optional[List[RangePattern]] = None
+    ranges: List[RangePattern]
     maxn: Optional[int] = None
 
     def __init__(self, r: str, max=None):
@@ -76,6 +76,7 @@ class PageRange(Iterable[int]):
                 if len(t) == 1:
                     self.ranges.append(int(t[0]))
                 elif len(t) == 2:
+                    pat: Tuple[Optional[int], Optional[int]]
                     if t == ("", ""):
                         pat = (None, None)
                     elif t[0] == "":
@@ -140,7 +141,7 @@ class PageRange(Iterable[int]):
                         raise InfiniteInteger
                     else:
                         length += self.maxn - b + 1
-                else:
+                elif b is not None and e is not None:
                     length += e - b + 1
         return length
 
