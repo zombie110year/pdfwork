@@ -10,8 +10,13 @@ from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 from .model import PageRange, PdfSlice
 from .utils import export_outline, import_outline, open_pdf
+from .outline import parse_outline
 
-__all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
+if TYPE_CHECKING:
+    from .outline import OutlineTuple
+
+__all__ = ("action_merge", "action_split", "action_import_outline",
+           "action_export_outline", "action_erase_outline")
 
 
 def action_merge(inputs: str, output: Optional[str]):
@@ -112,38 +117,35 @@ def action_split(input: Optional[str], outputs: str):
 
         pdfw.save(path)
 
+
 def action_import_outline(pdf: str, input: Optional[str], offset=0):
     """将输入的目录信息导入到 pdf 文件中。
 
     :param str pdf: 要导入的 PDF 文件的路径。
     :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
     :param int offset: 页码的偏移量，默认为 0；这个参数是为了弥补照抄书籍目录页时，
-        由于前方页数未计算在内的造成的偏移。
+        由于前方页数未计算在内的造成的偏移。一般设置为目录页中标记为第一页的页面在 PDF 阅读器中的实际页码。
 
     目录信息将具有以下格式::
 
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     if input is None:
-        outlines = sys.stdin.read()
+        outline_src = sys.stdin.read()
     else:
         with open(input, "rt", encoding="utf-8") as src:
-            outlines = src.read()
-    raw_outlines: List[str] = [
-        l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)
-    ]
-    outlines: List[Tuple[int, str, int]] = []
-
-    for o in raw_outlines:
-        parts = o.split("@")
-        pn = int(parts[-1].strip())
-        level = parts[0].count("\t")
-        title = "@".join(parts[:-1]).strip()
-        pat = (level, title, pn - offset)
-        outlines.append(pat)
+            outline_src = src.read()
+    outline_src = "\n".join([
+        # 忽略空行和 # 注释行
+        l for l in outline_src.split("\n") if l != "" and not l.startswith("#")
+    ])
+    outlines: List[OutlineTuple] = parse_outline(outline_src)
+    for i in range(len(outlines)):
+        x = outlines[i]
+        outlines[i] = x[0], x[1], (x[2] + offset - 2)
 
     pdfile = open_pdf(pdf)
     pdfr = PdfFileReader(pdfile)
@@ -166,12 +168,15 @@ def action_export_outline(pdf: str, output: Optional[str]):
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     with open_pdf(pdf) as pdfin:
         outlines = export_outline(pdfin)
 
-    content = "\n".join(["{}{} @ {}".format("\t" * level, title, pn) for level, title, pn in outlines])
+    content = "\n".join([
+        "{}{} @ {}".format("\t" * level, title, pn)
+        for level, title, pn in outlines
+    ])
     if output is not None:
         with open(output, "wt", encoding="utf-8") as outbuf:
             outbuf.write(content)

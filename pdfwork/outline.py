@@ -19,7 +19,7 @@ def parse_outline_iter(src: str) -> Generator[OutlineTuple, None, None]:
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的，如果有一行没有标注页码，那么会继承上一行的页码。
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     last_page = 0
     linepat = re.compile(
@@ -47,6 +47,6 @@ def parse_outline(src: str) -> List[OutlineTuple]:
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的，如果有一行没有标注页码，那么会继承上一行的页码。
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     return [i for i in parse_outline_iter(src)]
