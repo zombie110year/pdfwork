@@ -1,5 +1,4 @@
 {
-    "restructuredtext.confPath": "",
     "editor.tabSize": 4,
     "python.pythonPath": "${workspaceFolder}/.venv/Scripts/python",
     "python.formatting.provider": "yapf",

@@ -1,17 +1,14 @@
 import re
 import sys
-from io import BytesIO, StringIO
+from io import BytesIO
 from os import fdopen
 from typing import *
 
-import pikepdf
-from PyPDF2.generic import Destination, IndirectObject
-from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-from pikepdf import Pdf, OutlineItem
+from pikepdf import Pdf
 
-from .range import *
 from .outline import *
-from .utils import export_outline, import_outline, open_pdf
+from .range import *
+from .utils import export_outline, import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
            "action_export_outline", "action_erase_outline")
@@ -40,14 +37,14 @@ def action_merge(inputs: str, output: Optional[str]):
     **注意** ：页码是从 1 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
+    pdfw: Pdf = Pdf.new()
 
     slices = re.split(r" *& *", inputs)
     # 合并各文件
     for sliced in slices:
         path, pages = re.split(r" */ *", sliced)
         pdfin = open_pdf(path)
-        pdfs: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
+        pdfs: Pdf = Pdf.open(pdfin)
 
         for pn in MultiRange(pages):
             page = pdfs.pages.p(pn)
@@ -96,11 +93,11 @@ def action_split(input: Optional[str], outputs: str):
     else:
         pdfin = open_pdf(input)
 
-    pdfr: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
+    pdfr: Pdf = Pdf.open(pdfin)
     # 输出切片
     slices = re.split(r" *\| *", outputs)
     for sliced in slices:
-        pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
+        pdfw: Pdf = Pdf.new()
 
         path, pages = re.split(r" */ *", sliced)
         pr = MultiRange(pages).iter()

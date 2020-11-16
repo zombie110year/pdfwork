@@ -249,19 +249,6 @@ type = "legacy"
 url = "https://mirrors.aliyun.com/pypi/simple"
 
 [[package]]
-category = "main"
-description = ""
-name = "pypdf2"
-optional = false
-python-versions = "*"
-version = "1.26.0"
-
-[package.source]
-reference = "aliyun"
-type = "legacy"
-url = "https://mirrors.aliyun.com/pypi/simple"
-
-[[package]]
 category = "dev"
 description = "pytest: simple powerful testing with Python"
 name = "pytest"
@@ -376,7 +363,7 @@ type = "legacy"
 url = "https://mirrors.aliyun.com/pypi/simple"
 
 [metadata]
-content-hash = "1c2d2be9a2f757d8ecb19b578e3999fc5d3ca3068d60a207caaab109ff836302"
+content-hash = "03f8731c9591e219d5f28360dd4d76fad234c7285c41cc8dc0097f34ece13242"
 lock-version = "1.0"
 python-versions = "^3.6"
 
@@ -532,9 +519,6 @@ py = [
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
-]
-pypdf2 = [
-    {file = "PyPDF2-1.26.0.tar.gz", hash = "md5:2301acc0ecbab0633d4c9b883d50ee5e"},
 ]
 pytest = [
     {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},

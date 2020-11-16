@@ -1,18 +1,14 @@
 [tool.poetry]
 name = "pdfwork"
-version = "0.1.0"
-description = "基于 PyPDF2 封装的命令行工具，处理 PDF 文件用"
+version = "0.2.0"
+description = "基于 pikepdf 封装的命令行工具，处理 PDF 文件用"
 authors = ["zombie110year <zombie110year@outlook.com>"]
 readme = "README.rst"
 license = "MIT"
 homepage = "https://github.com/zombie110year/pdfwork"
 repository = "https://github.com/zombie110year/pdfwork.git"
-packages = [
-    { include = "pdfwork" }
-]
-exclude = [
-    "debug.py"
-]
+packages = [{ include = "pdfwork" }]
+exclude = ["debug.py"]
 
 [tool.poetry.scripts]
 pdfwork = "pdfwork.cli:cli_main"
@@ -24,7 +20,6 @@ pdfwork = "pdfwork.cli:cli_main"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-PyPDF2 = "^1.26.0"
 pikepdf = "^2.0.0"
 more-itertools = "^8.3.0"
 

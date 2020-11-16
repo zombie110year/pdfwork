@@ -17,11 +17,9 @@ Outline 的表示法可分为三个部分：
 3. 页码：大纲所跳转的逻辑页码。可以忽略，令解析器自动推导，在这种情况下会使用上一条大纲的页码。
     这里的页码只涉及逻辑页码，与物理页码的偏移是在 import_outline 模块处理的。
 """
-from io import StringIO
 import re
-
 from dataclasses import dataclass
-from re import match
+from io import StringIO
 from typing import *
 
 from .exceptions import OutlineParseError

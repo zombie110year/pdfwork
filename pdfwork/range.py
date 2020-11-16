@@ -19,8 +19,8 @@
     ## 不会合并区间
     3,2:4 => [3, 2, 3]
 """
-from typing import *
 import re
+from typing import *
 
 
 class RangeParseError(Exception):
