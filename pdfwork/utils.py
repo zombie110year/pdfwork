@@ -74,20 +74,22 @@ def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
         bookmark = o
 
         bookmark = pdfw.addBookmark(
-            # title
-            f"{seqn} {o.title}",
-            # pagenum
-            o.index + offset,
-            # parent
-            parent,
-            #color
-            None,
-            #bold
-            False,
-            #italic
-            False,
-            #fit
-            '/Fit')
+        # title
+        f"{seqn} {o.title}",
+        # pagenum： -1 是因为逻辑页码从 1 开始，而 PyPDF2 对页码的索引从 0 开始
+        # offset = 物理页码 - 逻辑页码
+        # 逻辑页码表示这是正文中的第几页，物理页码则表示这是第几张纸
+        o.index + offset - 1,
+        # parent
+        parent,
+        #color
+        None,
+        #bold
+        False,
+        #italic
+        False,
+        #fit
+        '/Fit')
 
         if o.indent > stack[-1].indent:
             stack.append(o)
