@@ -3,6 +3,7 @@
 from argparse import ArgumentParser, Namespace
 from typing import *
 
+from . import __version__
 from .actions import *
 
 __all__ = ("cli_main", )
@@ -10,6 +11,9 @@ __all__ = ("cli_main", )
 
 def cli_parser():
     p = ArgumentParser("pdfwork", description="对 PDF 进行拆分、合并、书签等操作")
+    p.add_argument("--version",
+                   action="version",
+                   version=f"pdfwork({__version__}) of zombie110year")
     opera = p.add_subparsers(title="指令", description="一级子命令", dest="opera")
     merge = opera.add_parser("merge", help="合并 PDF 文件，可通过命令行或 stdin 输入文件路径")
     split = opera.add_parser("split",
@@ -96,7 +100,8 @@ def cli_main():
         action_split(args.input, args.output)
     elif args.opera == "outline":
         if args.outlinecmd == "import":
-            action_import_outline(args.pdf, args.input, args.output, args.offset)
+            action_import_outline(args.pdf, args.input, args.output,
+                                  args.offset)
         elif args.outlinecmd == "export":
             action_export_outline(args.pdf, args.output)
         elif args.outlinecmd == "erase":
