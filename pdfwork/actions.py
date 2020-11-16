@@ -9,11 +9,8 @@ from PyPDF2.generic import Destination, IndirectObject
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 from .model import PageRange, PdfSlice
-from .outline import parse_outline
+from .parse_outline import *
 from .utils import export_outline, import_outline, open_pdf
-
-if TYPE_CHECKING:
-    from .outline import OutlineTuple
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
            "action_export_outline", "action_erase_outline")
@@ -138,20 +135,14 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
     else:
         with open(input, "rt", encoding="utf-8") as src:
             outline_src = src.read()
-    outline_src = "\n".join([
-        # 忽略空行和 # 注释行
-        l for l in outline_src.split("\n") if l != "" and not l.startswith("#")
-    ])
-    outlines: List[OutlineTuple] = parse_outline(outline_src)
-    for i in range(len(outlines)):
-        x = outlines[i]
-        outlines[i] = x[0], x[1], (x[2] + offset - 2)
+    root = outline_decode(outline_src)
 
     pdfile = open_pdf(pdf)
     pdfr = PdfFileReader(pdfile)
     pdfw = PdfFileWriter()
     pdfw.appendPagesFromReader(pdfr)
-    import_outline(pdfw, outlines)
+
+    import_outline(pdfw, root, offset)
 
     with open(pdf, "wb") as out:
         pdfw.write(out)

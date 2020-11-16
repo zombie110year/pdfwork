@@ -3,7 +3,7 @@ from typing import *
 
 from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
-from .outline import OutlineTuple
+from .parse_outline import Outline
 
 __all__ = ("open_pdf", "export_outline")
 
@@ -40,7 +40,7 @@ def export_outline(pdf: BytesIO) -> list:
                 pagenumber = reader.getDestinationPageNumber(l)
                 outlines.append((level, title, pagenumber))
 
-    outlines: List[OutlineTuple] = []
+    outlines: List[Outline] = []
     reader = PdfFileReader(pdf)
     pdfoutlines = reader.getOutlines()
     get_outlines_from_nested(pdfoutlines, 0)
@@ -48,29 +48,59 @@ def export_outline(pdf: BytesIO) -> list:
     return outlines
 
 
-def import_outline(pdfw: PdfFileWriter, outlines: List[OutlineTuple]):
-    """将 outlines 导入到 pdf 中。
-    outlines 的三个字段分别是 (缩进，标题，页码)
-
-    **注意** ： 当输入的标签等级并非从 0 开始时，高于最初等级的书签将会丢失。
+def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
+    """将大纲导入到 pdf 中。
     """
+    seq = [1]
+    stack = [root]
+    bookmarks = [None]
 
-    if len(outlines) == 0:
-        return
+    def import_sub(o: Outline):
+        nonlocal seq
+        nonlocal stack
+        nonlocal bookmarks
 
-    # 第一次
-    level, title, pn = outlines[0]
-    parents: List[Optional[Destination]] = [None] * 16
-    lastobj = pdfw.addBookmark(title, pn, parents[level], None, False, False,
-                               "/Fit")
-    lastone = (level, title, pn)
+        if o.indent > stack[-1].indent:
+            seq.append(1)
+        elif o.indent < stack[-1].indent:
+            seq = seq[:o.indent + 1]
+            seq[o.indent] += 1
+        else:
+            seq[o.indent] += 1
 
-    for outline in outlines[1:]:
-        level, title, pn = outline
+        parent = bookmarks[o.indent]
 
-        if level > lastone[0]:
-            parents[level] = lastobj
+        seqn = ".".join([f"{i}" for i in seq[:o.indent + 1]])
+        bookmark = o
 
-        lastobj = pdfw.addBookmark(title, pn, parents[level], None, False,
-                                   False, "/Fit")
-        lastone = (level, title, pn)
+        bookmark = pdfw.addBookmark(
+            # title
+            f"{seqn} {o.title}",
+            # pagenum
+            o.index + offset,
+            # parent
+            parent,
+            #color
+            None,
+            #bold
+            False,
+            #italic
+            False,
+            #fit
+            '/Fit')
+
+        if o.indent > stack[-1].indent:
+            stack.append(o)
+            bookmarks.append(bookmark)
+        elif o.indent < stack[-1].indent:
+            stack = stack[:o.indent + 2]
+            bookmarks = bookmarks[:o.indent + 2]
+        else:
+            stack[o.indent + 1] = o
+            bookmarks[o.indent + 1] = bookmark
+
+        for subo in o.children:
+            import_sub(subo)
+
+    for node in root.children:
+        import_sub(node)
