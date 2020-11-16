@@ -17,6 +17,7 @@ Outline 的表示法可分为三个部分：
 3. 页码：大纲所跳转的逻辑页码。可以忽略，令解析器自动推导，在这种情况下会使用上一条大纲的页码。
     这里的页码只涉及逻辑页码，与物理页码的偏移是在 import_outline 模块处理的。
 """
+from io import StringIO
 import re
 
 from dataclasses import dataclass
@@ -86,11 +87,6 @@ class Outline:
         else:
             return None
 
-    def encode(self) -> str:
-        """将树编码为文本
-        """
-        raise NotImplementedError
-
     def __eq__(self, o: "Outline") -> bool:
         if all([
                 self.indent == o.indent, self.title == o.title,
@@ -145,10 +141,26 @@ def outline_decode(text: str) -> Outline:
     return tree
 
 
-def outline_encode(ot: Outline) -> str:
-    """将大纲树编码为源码表示，见 :meth:`Outline.encode`。
+def outline_encode(root: Outline) -> str:
+    """将大纲树编码为源码表示。
     """
-    return ot.encode()
+    def flatten(array: List[Outline], o: Outline):
+        if o.children:
+            array.append(o)
+            for i in o.children:
+                flatten(array, i)
+        else:
+            array.append(o)
+
+    linear_outlines = []
+    flatten(linear_outlines, root)
+    buf = StringIO()
+    # 排除 ROOT
+    for oi in linear_outlines[1:]:
+        buf.write("    " * oi.indent + f"{oi.title} @ {oi.index}\n")
+    buf.seek(0, 0)
+    text = buf.read()
+    return text
 
 
 def parse_line(
