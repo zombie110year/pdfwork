@@ -186,7 +186,7 @@ def parse_line(
         indent_pat = m[0] if m else None
 
     if indent_pat:
-        indent = re.match(r"^ *|\t*", line)[0].count(indent_pat)
+        indent = re.match(r"^( +|\t+)?", line)[0].count(indent_pat)
         remain = line.lstrip(indent_pat * indent)
     else:
         indent = 0

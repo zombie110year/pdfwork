@@ -60,3 +60,25 @@ def test_outline_decode():
     out = outline_decode(src)
     print(f"{out!r}")
     assert tree == out
+
+def test_outline_decode_tab():
+    src = "".join(test_str).replace("    ", "\t")
+    print(f"{src!r}")
+    tree = Outline(-1, 'OUTLINE ROOT', 0, [
+        Outline(0, '晶体与晶体学', 1, [
+            Outline(1, '晶体学概述', 1, [
+                Outline(2, '引言', 1),
+                Outline(2, '经典晶体学', 2),
+                Outline(2, '近代晶体学', 2)
+            ]),
+            Outline(1, '晶体与晶体材料', 2, [
+                Outline(2, '晶体的概念', 2),
+                Outline(2, '晶体的基本特征', 3),
+                Outline(2, '非晶体', 5),
+                Outline(2, '液晶', 6)
+            ])
+        ])
+    ])
+    out = outline_decode(src)
+    print(f"{out!r}")
+    assert tree == out
