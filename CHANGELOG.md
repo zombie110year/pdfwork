@@ -1,3 +1,3 @@
-# v0.1.1
+# 0.2.0alpha
 
-修复了当分割、合并无书签文件时，发生 IndexError 的错误
+1. 用 pikepdf 重构了 merge 和 split 功能

@@ -1,5 +1,4 @@
 {
-    "restructuredtext.confPath": "",
     "editor.tabSize": 4,
     "python.pythonPath": "${workspaceFolder}/.venv/Scripts/python",
     "python.formatting.provider": "yapf",
@@ -8,5 +7,6 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.sortImports.path": "${workspaceFolder}/.venv/Scripts/isort"
 }

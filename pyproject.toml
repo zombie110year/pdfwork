@@ -1,18 +1,14 @@
 [tool.poetry]
 name = "pdfwork"
-version = "0.1.1"
-description = "基于 PyPDF2 封装的命令行工具，处理 PDF 文件用"
+version = "0.3.0"
+description = "基于 pikepdf 封装的命令行工具，处理 PDF 文件用"
 authors = ["zombie110year <zombie110year@outlook.com>"]
 readme = "README.rst"
 license = "MIT"
 homepage = "https://github.com/zombie110year/pdfwork"
 repository = "https://github.com/zombie110year/pdfwork.git"
-packages = [
-    { include = "pdfwork" }
-]
-exclude = [
-    "debug.py"
-]
+packages = [{ include = "pdfwork" }]
+exclude = ["debug.py"]
 
 [tool.poetry.scripts]
 pdfwork = "pdfwork.cli:cli_main"
@@ -24,15 +20,20 @@ pdfwork = "pdfwork.cli:cli_main"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-PyPDF2 = "^1.26.0"
+pikepdf = "^2.0.0"
+more-itertools = "^8.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 yapf = "^0.29.0"
+isort = "^4.3.21"
+mypy = "^0.780"
 
 [[tool.poetry.source]]
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/simple"
-name = "tsinghua"
+url = "https://mirrors.aliyun.com/pypi/simple"
+name = "aliyun"
+default = true
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

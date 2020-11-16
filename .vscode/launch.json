@@ -2,11 +2,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Attach",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "port": 5678,
+                "host": "127.0.0.1"
+            }
+        },
+        {
             "name": "Python: debug.py",
             "type": "python",
             "request": "launch",
             "program": "debug.py",
             "console": "integratedTerminal"
-        }
+        },
     ]
 }

@@ -1,179 +1,103 @@
-import re
-import sys
-from io import BytesIO
-from io import StringIO
-from os import fdopen
+from pathlib import Path
+from sys import stdin
 from typing import *
 
-from PyPDF2.generic import Destination
-from PyPDF2.generic import IndirectObject
-from PyPDF2.pdf import PdfFileReader
-from PyPDF2.pdf import PdfFileWriter
+from pikepdf import Pdf
 
-from .model import PdfSlice
-from .utils import open_pdf
-from .utils import export_outline
-from .utils import import_outline
+from .outline import *
+from .range import *
+from .utils import check_paths_exists, export_outline, import_outline
 
-__all__ = ("action_merge", "action_split", "action_import_outline", "action_export_outline", "action_erase_outline")
+__all__ = ("action_merge", "action_split", "action_import_outline",
+           "action_export_outline", "action_erase_outline")
 
 
-def action_merge(inputs: str, output: Optional[str]):
-    """一个合并任务。
+def action_merge(inputs: List[str], output: str):
+    """合并一系列 PDF 文件。
 
-    :param str inputs: 用字符串表示的输入
-    :param Optional[str] output: 输出文件路径，如果为 None 则为 stdout
+    :param input: 当输入一组路径时，按照顺序合并对应的文件；当输入以 ``@`` 开头的文件名（如 ``@files.txt``）时，从 `@files.txt` 读取文件路径并按顺序合并；当为 None 时，从 stdin 读取文件路径并按顺序合并。
+    :param output: 输出路径。
 
-    一个输入字符串应满足 `<filename>:<page range>|<file2>:<pr 2>` 的形式，如::
-
-        action_merge("example.pdf:1,2,3-|example2.pdf:5,2,4", None)
-
-    将会输出以这样的顺序排列的新文档::
-
-        example.pdf:1
-        example.pdf:2
-        example.pdf:3
-        example.pdf:...直到末尾
-        example2.pdf:5
-        example2.pdf:2
-        example2.pdf:4
-
-    **注意** ：所有页码都是从 0 开始的。
-    **注意** ：书签、标记等可能会遗失。
+    **注意** ：书签会丢失，如果想要保留，需提前导出备份，见 :meth:`action_export_outline`。
     """
-    pdfw = PdfFileWriter()
-    slices = inputs.split("|")
-    outline_pn = 0
-    outlines = []
-    # 合并各文件
-    for sliced in slices:
-        path, pages = sliced.split(":")
-        pdfin = open_pdf(path)
-        pdfs = PdfSlice(pdfin, pages)
-        for p in pdfs:
-            pdfw.addPage(p)
-        for outline in pdfs.iter_outlines():
-            if outline is not None:
-                outlines.append((outline[0], outline[1], outline_pn))
-            outline_pn += 1
-
-    import_outline(pdfw, outlines)
-
-    # 输出文件
-    if output is None:
-        pdfout = BytesIO()
-        pdfw.write(pdfout)
-        pdfout.seek(0, 0)
-        content = pdfout.read()
-        pdfout.close()
-        bstdout = fdopen(sys.stdout.fileno(), "wb")
-        bstdout.write(content)
-        bstdout.close()
+    if len(inputs) == 0:
+        # 从 stdin 读取文件路径
+        paths = check_paths_exists([i.rstrip("\n") for i in stdin.readlines()])
+    elif len(inputs) == 1 and inputs[0].startswith("@"):
+        # 从 @file.list 读取文件路径
+        with open(inputs[0], "rt", encoding="utf-8") as file_list:
+            paths = check_paths_exists(
+                [i.rstrip("\n") for i in file_list.readlines()])
     else:
-        with open(output, "wb") as pdfout:
-            pdfw.write(pdfout)
+        paths = check_paths_exists(inputs)
+
+    pdfw: Pdf = Pdf.new()
+
+    for path in paths:
+        pdfr = Pdf.open(path)
+        pdfw.extends(pdfr.pages)
+        pdfr.close()
+
+    pdfw.save(output, linearize=True)
 
 
-def action_split(input: Optional[str], outputs: str):
+def action_split(input: str, outputs: Optional[str]):
     """一个分割任务。
 
-    :param Optional[str] input: 输入文件的路径，如果为 None 则为 stdin
-    :param str outputs: 输出文件以及它们所得到的页码
+    :param input: 输入文件的路径
+    :param str outputs: 输出路径。可使用 Python format 模板格式化页码。如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。例如，假设文件有超过 100 但不足 1000 页时，将格式化为 ``{:03d}.pdf``。默认输出到当前文件夹
 
-    输出参数应满足 `<filename>:<page range>|<file2>:<pr 2>` 的形式，如::
-
-        action_split("p1.pdf:1,2,3-|p2.pdf:5,2,4")
-
-    这样，分隔出的两个文件将会拥有以下页码的内容::
-
-        p1.pdf:
-            1,
-            2,
-            3,
-            ... 直到末尾
-
-        p2.pdf:
-            5,
-            2,
-            4
-
-
-    **注意** ：所有页码都是从 0 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    # 获取输入
-    if input is None:
-        fp = fdopen(sys.stdin.fileno(), "rb")
-        pdfin = BytesIO(fp.read())
-        fp.close()
+    pdfr: Pdf = Pdf.open(input)
+
+    if outputs is None:
+        max_num = len(pdfr.pages)
+        width = sum(
+            [1 for i in range(max_num) if (max_num := max_num // 10) != 0]) + 1
+        fmt = f"{{:0{width}d}}.pdf"
     else:
-        pdfin = open_pdf(input)
+        fmt = outputs
 
-    # 输出切片
-    slices = outputs.split("|")
-    for sliced in slices:
-        pdfw = PdfFileWriter()
+    for i, page in enumerate(pdfr.pages):
+        pdfw: Pdf = Pdf.new()
+        pdfw.pages.append(page)
 
-        path, pages = sliced.split(":")
-        pdfs = PdfSlice(pdfin, pages)
+        path = Path(fmt.format(i))
+        path.mkdir(parents=True)
+        pdfw.save(path, linearize=True)
 
-        for p in pdfs:
-            pdfw.addPage(p)
-
-        outlines = []
-        outline_pn = 0
-        for outline in pdfs.iter_outlines():
-            if outline is not None:
-                outlines.append((outline[0], outline[1], outline_pn))
-            outline_pn += 1
-
-        import_outline(pdfw, outlines)
-
-        with open(path, "wb") as pdfout:
-            pdfw.write(pdfout)
+    pdfr.close()
 
 
-def action_import_outline(pdf: str, input: Optional[str], offset=0):
+def action_import_outline(pdf: str,
+                          input: Optional[str],
+                          output: str,
+                          offset=0):
     """将输入的目录信息导入到 pdf 文件中。
 
     :param str pdf: 要导入的 PDF 文件的路径。
     :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
-    :param int offset: 页码的偏移两，默认为 0；这个参数是为了弥补照抄书籍目录页时，
-        由于前方页数未计算在内的造成的偏移。
+    :param int offset: 页码的偏移量，默认为 0；这个参数是为了弥补照抄书籍目录页时，
+        由于前方页数未计算在内的造成的偏移。一般设置为目录页中标记为第一页的页面在 PDF 阅读器中的实际页码。
 
     目录信息将具有以下格式::
 
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     if input is None:
-        outlines = sys.stdin.read()
+        outline_src = sys.stdin.read()
     else:
         with open(input, "rt", encoding="utf-8") as src:
-            outlines = src.read()
-    raw_outlines: List[str] = [
-        l for l in outlines.split("\n") if l != "" and not l.startswith("#") and not re.match(r"^$", l)
-    ]
-    outlines: List[Tuple[int, str, int]] = []
+            outline_src = src.read()
+    root = outline_decode(outline_src)
 
-    for o in raw_outlines:
-        parts = o.split("@")
-        pn = int(parts[-1].strip())
-        level = parts[0].count("\t")
-        title = "@".join(parts[:-1]).strip()
-        pat = (level, title, pn - offset)
-        outlines.append(pat)
-
-    pdfile = open_pdf(pdf)
-    pdfr = PdfFileReader(pdfile)
-    pdfw = PdfFileWriter()
-    pdfw.appendPagesFromReader(pdfr)
-    import_outline(pdfw, outlines)
-
-    with open(pdf, "wb") as out:
-        pdfw.write(out)
+    pdfw = Pdf.open(pdf, allow_overwriting_input=True)
+    import_outline(pdfw, root, offset)
+    pdfw.save(output, linearize=True)
 
 
 def action_export_outline(pdf: str, output: Optional[str]):
@@ -187,12 +111,13 @@ def action_export_outline(pdf: str, output: Optional[str]):
         《标题》 @ <页码>
             《次级标题》 @ <页码>
 
-    **注意** ： 所有页码都是从 0 开始的
+    **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
-    with open_pdf(pdf) as pdfin:
-        outlines = export_outline(pdfin)
+    pdfr = Pdf.open(pdf)
+    with pdfr.open_outline() as pikeoutline:
+        root: Outline = export_outline(pdfr, pikeoutline)
 
-    content = "\n".join(["{}{} @ {}".format("\t" * level, title, pn) for level, title, pn in outlines])
+    content = outline_encode(root)
     if output is not None:
         with open(output, "wt", encoding="utf-8") as outbuf:
             outbuf.write(content)
@@ -200,15 +125,15 @@ def action_export_outline(pdf: str, output: Optional[str]):
         print(content)
 
 
-def action_erase_outline(pdf: str):
+def action_erase_outline(pdf: str, output: str):
     """抹除一个 PDF 文件中的目录信息
 
     :param str pdf: PDF 文件的路径
     """
-    pdfile = open_pdf(pdf)
-    reader = PdfFileReader(pdfile)
-    writer = PdfFileWriter()
-    writer.appendPagesFromReader(reader)
-    with open("out.pdf", "wb") as out:
-        writer.write(out)
-    pdfile.close()
+    pdfw = Pdf.new()
+
+    pdfr = Pdf.open(pdf)
+    pdfw.pages.extend(pdfr.pages)
+    pdfr.close()
+
+    pdfw.save(output, linearize=True)
