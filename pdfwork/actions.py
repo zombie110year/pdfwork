@@ -45,7 +45,7 @@ def action_split(input: str, outputs: Optional[str]):
     """一个分割任务。
 
     :param input: 输入文件的路径
-    :param str outputs: 输出路径。可使用 ``%d`` 占位符格式化页码。如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。例如，假设文件有超过 100 但不足 1000 页时，将格式化为 ``03%d.pdf``。默认输出到当前文件夹
+    :param str outputs: 输出路径。可使用 Python format 模板格式化页码。如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。例如，假设文件有超过 100 但不足 1000 页时，将格式化为 ``{:03d}.pdf``。默认输出到当前文件夹
 
     **注意** ：书签、标记等可能会遗失。
     """
@@ -55,7 +55,7 @@ def action_split(input: str, outputs: Optional[str]):
         max_num = len(pdfr.pages)
         width = sum(
             [1 for i in range(max_num) if (max_num := max_num // 10) != 0]) + 1
-        fmt = f"%0{width}d.pdf"
+        fmt = f"{{:0{width}d}}.pdf"
     else:
         fmt = outputs
 
@@ -63,7 +63,7 @@ def action_split(input: str, outputs: Optional[str]):
         pdfw: Pdf = Pdf.new()
         pdfw.pages.append(page)
 
-        path = Path(fmt % i)
+        path = Path(fmt.format(i))
         path.mkdir(parents=True)
         pdfw.save(path, linearize=True)
 
