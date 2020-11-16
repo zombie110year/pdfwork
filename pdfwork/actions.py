@@ -170,10 +170,10 @@ def action_erase_outline(pdf: str):
 
     :param str pdf: PDF 文件的路径
     """
-    pdfile = open_pdf(pdf)
-    reader = PdfFileReader(pdfile)
-    writer = PdfFileWriter()
-    writer.appendPagesFromReader(reader)
-    with open("out.pdf", "wb") as out:
-        writer.write(out)
-    pdfile.close()
+    pdfw = Pdf.new()
+
+    pdfr = Pdf.open(pdf)
+    pdfw.pages.extend(pdfr.pages)
+    pdfr.close()
+
+    pdfw.save(pdf)
