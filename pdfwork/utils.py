@@ -97,6 +97,8 @@ def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
         elif o.indent < stack[-1].indent:
             stack = stack[:o.indent + 2]
             bookmarks = bookmarks[:o.indent + 2]
+            stack[o.indent + 1] = o
+            bookmarks[o.indent + 1] = bookmark
         else:
             stack[o.indent + 1] = o
             bookmarks[o.indent + 1] = bookmark
