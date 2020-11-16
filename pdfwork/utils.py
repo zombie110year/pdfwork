@@ -3,6 +3,8 @@ from typing import *
 
 from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
+from pikepdf import Pdf, OutlineItem
+
 from .outline import Outline
 
 __all__ = ("open_pdf", "export_outline")
@@ -52,63 +54,57 @@ def export_outline(pdf: BytesIO) -> Outline:
     return root
 
 
-def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
+def import_outline(pdfw: Pdf, root: Outline, offset: int):
     """将大纲导入到 pdf 中。
     """
-    seq = [1]
-    stack = [root]
-    bookmarks = [None]
+    with pdfw.open_outline() as outlines:
+        pikeroot = outlines.root
+        seq = [1]
+        stack = [root]
+        bookmarks = [None]
 
-    def import_sub(o: Outline):
-        nonlocal seq
-        nonlocal stack
-        nonlocal bookmarks
+        def import_sub(o: Outline):
+            nonlocal seq
+            nonlocal stack
+            nonlocal bookmarks
 
-        if o.indent > stack[-1].indent:
-            seq.append(1)
-        elif o.indent < stack[-1].indent:
-            seq = seq[:o.indent + 1]
-            seq[o.indent] += 1
-        else:
-            seq[o.indent] += 1
+            if o.indent > stack[-1].indent:
+                seq.append(1)
+            elif o.indent < stack[-1].indent:
+                seq = seq[:o.indent + 1]
+                seq[o.indent] += 1
+            else:
+                seq[o.indent] += 1
 
-        parent = bookmarks[o.indent]
+            seqn = ".".join([f"{i}" for i in seq[:o.indent + 1]])
 
-        seqn = ".".join([f"{i}" for i in seq[:o.indent + 1]])
-        bookmark = o
+            bookmark = OutlineItem(
+                # title
+                f"{seqn} {o.title}",
+                # 页码，pikepdf 从 0 开始计数
+                o.index + offset - 1,
+                # 跳转效果：适应页面
+                "Fit")
 
-        bookmark = pdfw.addBookmark(
-            # title
-            f"{seqn} {o.title}",
-            # pagenum： -1 是因为逻辑页码从 1 开始，而 PyPDF2 对页码的索引从 0 开始
-            # offset = 物理页码 - 逻辑页码
-            # 逻辑页码表示这是正文中的第几页，物理页码则表示这是第几张纸
-            o.index + offset - 1,
-            # parent
-            parent,
-            #color
-            None,
-            #bold
-            False,
-            #italic
-            False,
-            #fit
-            '/Fit')
+            if parent := bookmarks[o.indent]:
+                parent.children.append(bookmark)
+            else:
+                pikeroot.append(bookmark)
 
-        if o.indent > stack[-1].indent:
-            stack.append(o)
-            bookmarks.append(bookmark)
-        elif o.indent < stack[-1].indent:
-            stack = stack[:o.indent + 2]
-            bookmarks = bookmarks[:o.indent + 2]
-            stack[o.indent + 1] = o
-            bookmarks[o.indent + 1] = bookmark
-        else:
-            stack[o.indent + 1] = o
-            bookmarks[o.indent + 1] = bookmark
+            if o.indent > stack[-1].indent:
+                stack.append(o)
+                bookmarks.append(bookmark)
+            elif o.indent < stack[-1].indent:
+                stack = stack[:o.indent + 2]
+                bookmarks = bookmarks[:o.indent + 2]
+                stack[o.indent + 1] = o
+                bookmarks[o.indent + 1] = bookmark
+            else:
+                stack[o.indent + 1] = o
+                bookmarks[o.indent + 1] = bookmark
 
-        for subo in o.children:
-            import_sub(subo)
+            for subtree in o.children:
+                import_sub(subtree)
 
-    for node in root.children:
-        import_sub(node)
+        for node in root.children:
+            import_sub(node)

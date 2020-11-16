@@ -7,6 +7,7 @@ from typing import *
 import pikepdf
 from PyPDF2.generic import Destination, IndirectObject
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
+from pikepdf import Pdf, OutlineItem
 
 from .range import *
 from .outline import *
@@ -134,15 +135,9 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
             outline_src = src.read()
     root = outline_decode(outline_src)
 
-    pdfile = open_pdf(pdf)
-    pdfr = PdfFileReader(pdfile)
-    pdfw = PdfFileWriter()
-    pdfw.appendPagesFromReader(pdfr)
-
+    pdfw = Pdf.open(pdf, allow_overwriting_input=True)
     import_outline(pdfw, root, offset)
-
-    with open(pdf, "wb") as out:
-        pdfw.write(out)
+    pdfw.save(pdf)
 
 
 def action_export_outline(pdf: str, output: Optional[str]):
