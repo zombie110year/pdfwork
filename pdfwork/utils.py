@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import *
 
 from pikepdf import Outline as PikeOutline
@@ -102,3 +103,21 @@ def make_pagenum_search_table(pdf: Pdf) -> Callable[[str], Optional[int]]:
         return id2num.get(pageid, None)
 
     return query
+
+
+def check_paths_exists(paths: List[str]) -> List[str]:
+    """检查文件是否存在
+    """
+    valid = []
+    invalid = []
+    for i, p in enumerate(paths):
+        path = Path(p)
+        if path.exists():
+            valid.append(path.absolute().as_posix())
+        else:
+            invalid.append((i, p))
+
+    if not invalid:
+        return valid
+    else:
+        raise FileNotFoundError(invalid)

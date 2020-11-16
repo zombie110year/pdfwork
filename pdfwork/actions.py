@@ -1,116 +1,79 @@
-import re
-import sys
-from io import BytesIO
-from os import fdopen
+from pathlib import Path
+from sys import stdin
 from typing import *
 
 from pikepdf import Pdf
 
 from .outline import *
 from .range import *
-from .utils import export_outline, import_outline
+from .utils import check_paths_exists, export_outline, import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
            "action_export_outline", "action_erase_outline")
 
 
-def action_merge(inputs: str, output: Optional[str]):
-    """一个合并任务。
+def action_merge(inputs: List[str], output: str):
+    """合并一系列 PDF 文件。
 
-    :param str inputs: 用字符串表示的输入
-    :param Optional[str] output: 输出文件路径，如果为 None 则为 stdout
+    :param input: 当输入一组路径时，按照顺序合并对应的文件；当输入以 ``@`` 开头的文件名（如 ``@files.txt``）时，从 `@files.txt` 读取文件路径并按顺序合并；当为 None 时，从 stdin 读取文件路径并按顺序合并。
+    :param output: 输出路径。
 
-    一个输入字符串应满足 ``<filename> / <page range> & <file2> / <pr 2>`` 的形式，如::
-
-        action_merge("example.pdf / 1,2,3: & example2.pdf / 5,2,4", None)
-
-    将会输出以这样的顺序排列的新文档::
-
-        example.pdf:1
-        example.pdf:2
-        example.pdf:3
-        example.pdf:...直到末尾
-        example2.pdf:5
-        example2.pdf:2
-        example2.pdf:4
-
-    **注意** ：页码是从 1 开始的。
-    **注意** ：书签、标记等可能会遗失。
+    **注意** ：书签会丢失，如果想要保留，需提前导出备份，见 :meth:`action_export_outline`。
     """
+    if len(inputs) == 0:
+        # 从 stdin 读取文件路径
+        paths = check_paths_exists([i.rstrip("\n") for i in stdin.readlines()])
+    elif len(inputs) == 1 and inputs[0].startswith("@"):
+        # 从 @file.list 读取文件路径
+        with open(inputs[0], "rt", encoding="utf-8") as file_list:
+            paths = check_paths_exists(
+                [i.rstrip("\n") for i in file_list.readlines()])
+    else:
+        paths = check_paths_exists(inputs)
+
     pdfw: Pdf = Pdf.new()
 
-    slices = re.split(r" *& *", inputs)
-    # 合并各文件
-    for sliced in slices:
-        path, pages = re.split(r" */ *", sliced)
-        pdfin = open_pdf(path)
-        pdfs: Pdf = Pdf.open(pdfin)
+    for path in paths:
+        pdfr = Pdf.open(path)
+        pdfw.extends(pdfr.pages)
+        pdfr.close()
 
-        for pn in MultiRange(pages):
-            page = pdfs.pages.p(pn)
-            pdfw.pages.append(page)
-
-    if output is None:
-        outbuf = fdopen(sys.stdout.fileno(), "wb")
-        pdfw.save(outbuf, linearize=True)
-        outbuf.close()
-    else:
-        pdfw.save(output, linearize=True)
+    pdfw.save(output, linearize=True)
 
 
-def action_split(input: Optional[str], outputs: str):
+def action_split(input: str, outputs: Optional[str]):
     """一个分割任务。
 
-    :param Optional[str] input: 输入文件的路径，如果为 None 则为 stdin
-    :param str outputs: 输出文件以及它们所得到的页码
+    :param input: 输入文件的路径
+    :param str outputs: 输出路径。可使用 ``%d`` 占位符格式化页码。如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。例如，假设文件有超过 100 但不足 1000 页时，将格式化为 ``03%d.pdf``。默认输出到当前文件夹
 
-    输出参数应满足 ``<filename> / <page range> | <file2>/<pr 2>`` 的形式，如::
-
-        action_split("p1.pdf / 1,2,3: | p2.pdf / 5,2,4")
-
-    这样，分隔出的两个文件将会拥有以下页码的内容::
-
-        p1.pdf:
-            1,
-            2,
-            3,
-            ... 直到末尾
-
-        p2.pdf:
-            5,
-            2,
-            4
-
-
-    **注意** ：页码是从 1 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
-    # 获取输入
-    if input is None:
-        fp = fdopen(sys.stdin.fileno(), "rb")
-        pdfin = BytesIO(fp.read())
-        fp.close()
+    pdfr: Pdf = Pdf.open(input)
+
+    if outputs is None:
+        max_num = len(pdfr.pages)
+        width = sum(
+            [1 for i in range(max_num) if (max_num := max_num // 10) != 0]) + 1
+        fmt = f"%0{width}d.pdf"
     else:
-        pdfin = open_pdf(input)
+        fmt = outputs
 
-    pdfr: Pdf = Pdf.open(pdfin)
-    # 输出切片
-    slices = re.split(r" *\| *", outputs)
-    for sliced in slices:
+    for i, page in enumerate(pdfr.pages):
         pdfw: Pdf = Pdf.new()
+        pdfw.pages.append(page)
 
-        path, pages = re.split(r" */ *", sliced)
-        pr = MultiRange(pages).iter()
-
-        for p in pr:
-            # QPDF 用 1 做索引起始
-            page = pdfr.pages.p(p)
-            pdfw.pages.append(page)
-
+        path = Path(fmt % i)
+        path.mkdir(parents=True)
         pdfw.save(path, linearize=True)
 
+    pdfr.close()
 
-def action_import_outline(pdf: str, input: Optional[str], offset=0):
+
+def action_import_outline(pdf: str,
+                          input: Optional[str],
+                          output: str,
+                          offset=0):
     """将输入的目录信息导入到 pdf 文件中。
 
     :param str pdf: 要导入的 PDF 文件的路径。
@@ -134,7 +97,7 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
 
     pdfw = Pdf.open(pdf, allow_overwriting_input=True)
     import_outline(pdfw, root, offset)
-    pdfw.save(pdf, linearize=True)
+    pdfw.save(output, linearize=True)
 
 
 def action_export_outline(pdf: str, output: Optional[str]):
@@ -162,7 +125,7 @@ def action_export_outline(pdf: str, output: Optional[str]):
         print(content)
 
 
-def action_erase_outline(pdf: str):
+def action_erase_outline(pdf: str, output: str):
     """抹除一个 PDF 文件中的目录信息
 
     :param str pdf: PDF 文件的路径
@@ -173,4 +136,4 @@ def action_erase_outline(pdf: str):
     pdfw.pages.extend(pdfr.pages)
     pdfr.close()
 
-    pdfw.save(pdf, linearize=True)
+    pdfw.save(output, linearize=True)
