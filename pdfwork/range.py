@@ -40,7 +40,7 @@ class MultiRange(Iterable):
         self.components = []
         for r in repr:
             if isinstance(r, str):
-                for comp in re.split(r", *", r):
+                for comp in re.split(r" *, *", r):
                     if self.comp_chker.fullmatch(comp):
                         comp_: range = parse_component(comp)
                         self.components.append(comp_)
@@ -55,6 +55,9 @@ class MultiRange(Iterable):
                 raise ValueError(f"{r!r} is not str or range or int")
 
     def __iter__(self) -> Iterator[int]:
+        return self.iter()
+
+    def iter(self) -> Iterator[int]:
         for comp in self.components:
             yield from comp
 

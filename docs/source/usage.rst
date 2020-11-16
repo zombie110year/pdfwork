@@ -76,4 +76,4 @@ PdfWork 的使用方法
 
     在 outline 子命令下的 PDF 文件路径参数必须在最后。
 
-页码范围的表示法详见 :class:`pdfwork.model.PageRange` 的说明文档。
+页码范围的表示法详见 :class:`pdfwork.model.MultiRange` 的说明文档。

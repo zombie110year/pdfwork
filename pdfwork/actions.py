@@ -8,7 +8,7 @@ import pikepdf
 from PyPDF2.generic import Destination, IndirectObject
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
-from .model import PageRange, PdfSlice
+from .range import *
 from .outline import *
 from .utils import export_outline, import_outline, open_pdf
 
@@ -22,9 +22,9 @@ def action_merge(inputs: str, output: Optional[str]):
     :param str inputs: 用字符串表示的输入
     :param Optional[str] output: 输出文件路径，如果为 None 则为 stdout
 
-    一个输入字符串应满足 ``<filename>:<page range>|<file2>:<pr 2>`` 的形式，如::
+    一个输入字符串应满足 ``<filename> / <page range> & <file2> / <pr 2>`` 的形式，如::
 
-        action_merge("example.pdf:1,2,3-|example2.pdf:5,2,4", None)
+        action_merge("example.pdf / 1,2,3: & example2.pdf / 5,2,4", None)
 
     将会输出以这样的顺序排列的新文档::
 
@@ -36,24 +36,21 @@ def action_merge(inputs: str, output: Optional[str]):
         example2.pdf:2
         example2.pdf:4
 
-    **注意** ：所有页码都是从 0 开始的。
+    **注意** ：页码是从 1 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
     pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
 
-    slices = inputs.split("|")
+    slices = re.split(r" *& *", inputs)
     # 合并各文件
     for sliced in slices:
-        path, pages = sliced.split(":")
+        path, pages = re.split(r" */ *", sliced)
         pdfin = open_pdf(path)
         pdfs: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
 
-        pagenums = PageRange(pages).iter_numbers()
-        pn = next(pagenums)
-        for i, p in enumerate(pdfs.pages):
-            if i == pn:
-                pn = next(pagenums)
-                pdfw.pages.append(p)
+        for pn in MultiRange(pages):
+            page = pdfs.pages.p(pn)
+            pdfw.pages.append(page)
 
     if output is None:
         outbuf = fdopen(sys.stdout.fileno(), "wb")
@@ -69,9 +66,9 @@ def action_split(input: Optional[str], outputs: str):
     :param Optional[str] input: 输入文件的路径，如果为 None 则为 stdin
     :param str outputs: 输出文件以及它们所得到的页码
 
-    输出参数应满足 ``<filename>:<page range>|<file2>:<pr 2>`` 的形式，如::
+    输出参数应满足 ``<filename> / <page range> | <file2>/<pr 2>`` 的形式，如::
 
-        action_split("p1.pdf:1,2,3-|p2.pdf:5,2,4")
+        action_split("p1.pdf / 1,2,3: | p2.pdf / 5,2,4")
 
     这样，分隔出的两个文件将会拥有以下页码的内容::
 
@@ -87,7 +84,7 @@ def action_split(input: Optional[str], outputs: str):
             4
 
 
-    **注意** ：所有页码都是从 0 开始的。
+    **注意** ：页码是从 1 开始的。
     **注意** ：书签、标记等可能会遗失。
     """
     # 获取输入
@@ -100,16 +97,16 @@ def action_split(input: Optional[str], outputs: str):
 
     pdfr: pikepdf.Pdf = pikepdf.Pdf.open(pdfin)
     # 输出切片
-    slices = outputs.split("|")
+    slices = re.split(r" *\| *", outputs)
     for sliced in slices:
         pdfw: pikepdf.Pdf = pikepdf.Pdf.new()
 
-        path, pages = sliced.split(":")
-        pr = PageRange(pages).iter_numbers()
+        path, pages = re.split(r" */ *", sliced)
+        pr = MultiRange(pages).iter()
 
         for p in pr:
             # QPDF 用 1 做索引起始
-            page = pdfr.pages.p(p + 1)
+            page = pdfr.pages.p(p)
             pdfw.pages.append(page)
 
         pdfw.save(path)
