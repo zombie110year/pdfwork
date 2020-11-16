@@ -34,7 +34,7 @@ class Outline:
 
     + :param int indent: 此大纲的缩进级别，从 0 开始
     + :param str title: 大纲文本
-    + :param int index: 对应的页码，需要解析为确定的整数
+    + :param int index: 对应的页码（从 1 开始的），需要解析为确定的整数
     """
     indent: int
     title: str

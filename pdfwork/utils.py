@@ -1,9 +1,10 @@
+import enum
 from io import BytesIO
 from typing import *
+from PyPDF2.generic import Destination
 
-from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
-
-from pikepdf import Pdf, OutlineItem
+from pikepdf import Pdf, OutlineItem, Object
+from pikepdf import Outline as PikeOutline
 
 from .outline import Outline
 
@@ -26,30 +27,25 @@ def open_pdf(path: str) -> BytesIO:
     return io
 
 
-def export_outline(pdf: BytesIO) -> Outline:
+def export_outline(pdf: Pdf, pike: PikeOutline) -> Outline:
     """将 pdf 中的书签导出为一个 Outline 树
     """
     root = Outline(-1, "OUTLINE ROOT", 0)
+    pn_map = make_pagenum_search_table(pdf)
 
-    def tree_copy(subtree: list, level: int):
-        """
-
-        :param list tree: 一个表示树结构的嵌套列表，例如 ``[[], [[]]]``
-        """
+    def tree_copy(subtree: List[OutlineItem], level: int):
         nonlocal root
+        for oi in subtree:
+            # Destination 结构为 [pageid, action, action_args]
+            # https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/PDF32000_2008.pdf
+            # 374 页，第 12.3.2.2 章
+            pageid = oi.destination[0].to_json().decode()
+            pn = pn_map(pageid)
+            o = Outline(level, oi.title, pn + 1)
+            root.add_node(o, o.indent)
+            tree_copy(oi.children, level + 1)
 
-        for l in subtree:
-            if isinstance(l, list):
-                tree_copy(l, level + 1)
-            else:
-                title = l.get("/Title", "untitled")
-                index = reader.getDestinationPageNumber(l)
-                o = Outline(level, title, index)
-                root.add_node(o, o.indent)
-
-    reader = PdfFileReader(pdf)
-    pdfoutlines = reader.getOutlines()
-    tree_copy(pdfoutlines, 0)
+    tree_copy(pike.root, 0)
 
     return root
 
@@ -108,3 +104,20 @@ def import_outline(pdfw: Pdf, root: Outline, offset: int):
 
         for node in root.children:
             import_sub(node)
+
+
+def make_pagenum_search_table(pdf: Pdf) -> Callable[[str], Optional[int]]:
+    """构建 《Page Object 标识符》 => 《页码》 查询表。
+
+    返回一个可执行对象，输入标识符便返回对应的页码。
+    """
+    id2num = {}
+
+    for i, page in enumerate(pdf.pages):
+        identifier = page.to_json().decode()
+        id2num[identifier] = i
+
+    def query(pageid: str) -> Optional[int]:
+        return id2num.get(pageid, None)
+
+    return query
