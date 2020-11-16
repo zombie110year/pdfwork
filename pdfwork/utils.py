@@ -3,7 +3,7 @@ from typing import *
 
 from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
-from .parse_outline import Outline
+from .outline import Outline
 
 __all__ = ("open_pdf", "export_outline")
 

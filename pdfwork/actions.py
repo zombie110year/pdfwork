@@ -9,7 +9,7 @@ from PyPDF2.generic import Destination, IndirectObject
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 from .model import PageRange, PdfSlice
-from .parse_outline import *
+from .outline import *
 from .utils import export_outline, import_outline, open_pdf
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
