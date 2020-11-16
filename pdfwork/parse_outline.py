@@ -115,7 +115,6 @@ class ParsingDebugInfo:
 def outline_decode(text: str) -> Outline:
     """解析大纲源码为大纲树
     """
-    # 解析时忽略空行和 `#` 起始的行
     source = text.splitlines(False)
     lines = len(source)
 
@@ -130,7 +129,8 @@ def outline_decode(text: str) -> Outline:
 
     for i, line in enumerate(source):
         dbg = ParsingDebugInfo(i, lines, line)
-        if i != "" or re.match(r"^[ \t]*#"):
+        # 解析时忽略空行
+        if not re.fullmatch(r"^[ \t]*$", line):
             oi, indent_pat = parse_line(line, indent_pat, last_index, dbg)
             if oi.indent > last_indent + 1:
                 raise OutlineParseError(f"{dbg.linenum}（缩进跨度过大）：{line!r}", dbg)
@@ -200,7 +200,18 @@ def parse_line(
             raise OutlineParseError(f"（格式错误）：{line!r}",
                                     ParsingDebugInfo(0, 0, line))
     else:
-        title = m["title"]
-        index = int(m["index"]) if m["index"] else last_index
+        title, _index = extract_line(line)
+        index = _index if _index else last_index
         oi = Outline(indent, title, index)
         return (oi, indent_pat)
+
+
+def extract_line(line: str) -> Tuple[str, Optional[int]]:
+    if '@' in line:
+        l, r = line.split("@")
+        title = l.strip()
+        index = int(r.strip())
+        return (title, index)
+    else:
+        title = line.strip()
+        return (title, None)
