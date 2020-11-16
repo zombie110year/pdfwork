@@ -55,10 +55,10 @@ def action_merge(inputs: str, output: Optional[str]):
 
     if output is None:
         outbuf = fdopen(sys.stdout.fileno(), "wb")
-        pdfw.save(outbuf)
+        pdfw.save(outbuf, linearize=True)
         outbuf.close()
     else:
-        pdfw.save(output)
+        pdfw.save(output, linearize=True)
 
 
 def action_split(input: Optional[str], outputs: str):
@@ -110,7 +110,7 @@ def action_split(input: Optional[str], outputs: str):
             page = pdfr.pages.p(p)
             pdfw.pages.append(page)
 
-        pdfw.save(path)
+        pdfw.save(path, linearize=True)
 
 
 def action_import_outline(pdf: str, input: Optional[str], offset=0):
@@ -137,7 +137,7 @@ def action_import_outline(pdf: str, input: Optional[str], offset=0):
 
     pdfw = Pdf.open(pdf, allow_overwriting_input=True)
     import_outline(pdfw, root, offset)
-    pdfw.save(pdf)
+    pdfw.save(pdf, linearize=True)
 
 
 def action_export_outline(pdf: str, output: Optional[str]):
@@ -176,4 +176,4 @@ def action_erase_outline(pdf: str):
     pdfw.pages.extend(pdfr.pages)
     pdfr.close()
 
-    pdfw.save(pdf)
+    pdfw.save(pdf, linearize=True)
