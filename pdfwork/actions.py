@@ -162,12 +162,9 @@ def action_export_outline(pdf: str, output: Optional[str]):
     **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     with open_pdf(pdf) as pdfin:
-        outlines = export_outline(pdfin)
+        root: Outline = export_outline(pdfin)
 
-    content = "\n".join([
-        "{}{} @ {}".format("\t" * level, title, pn)
-        for level, title, pn in outlines
-    ])
+    content = outline_encode(root)
     if output is not None:
         with open(output, "wt", encoding="utf-8") as outbuf:
             outbuf.write(content)

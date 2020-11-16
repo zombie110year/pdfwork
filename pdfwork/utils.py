@@ -24,28 +24,32 @@ def open_pdf(path: str) -> BytesIO:
     return io
 
 
-def export_outline(pdf: BytesIO) -> list:
-    """将 pdf 中的书签导出为一组列表。
-
-    这个列表是非嵌套的，每个元素是一个三元组：（缩进，标题，页码）。
+def export_outline(pdf: BytesIO) -> Outline:
+    """将 pdf 中的书签导出为一个 Outline 树
     """
-    def get_outlines_from_nested(nested: list, level: int):
-        """访问外部的 outbuf 与 reader 变量。
+    root = Outline(-1, "OUTLINE ROOT", 0)
+
+    def tree_copy(subtree: list, level: int):
         """
-        for l in nested:
+
+        :param list tree: 一个表示树结构的嵌套列表，例如 ``[[], [[]]]``
+        """
+        nonlocal root
+
+        for l in subtree:
             if isinstance(l, list):
-                get_outlines_from_nested(l, level + 1)
+                tree_copy(l, level + 1)
             else:
                 title = l.get("/Title", "untitled")
-                pagenumber = reader.getDestinationPageNumber(l)
-                outlines.append((level, title, pagenumber))
+                index = reader.getDestinationPageNumber(l)
+                o = Outline(level, title, index)
+                root.add_node(o, o.indent)
 
-    outlines: List[Outline] = []
     reader = PdfFileReader(pdf)
     pdfoutlines = reader.getOutlines()
-    get_outlines_from_nested(pdfoutlines, 0)
+    tree_copy(pdfoutlines, 0)
 
-    return outlines
+    return root
 
 
 def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
@@ -74,22 +78,22 @@ def import_outline(pdfw: PdfFileWriter, root: Outline, offset: int):
         bookmark = o
 
         bookmark = pdfw.addBookmark(
-        # title
-        f"{seqn} {o.title}",
-        # pagenum： -1 是因为逻辑页码从 1 开始，而 PyPDF2 对页码的索引从 0 开始
-        # offset = 物理页码 - 逻辑页码
-        # 逻辑页码表示这是正文中的第几页，物理页码则表示这是第几张纸
-        o.index + offset - 1,
-        # parent
-        parent,
-        #color
-        None,
-        #bold
-        False,
-        #italic
-        False,
-        #fit
-        '/Fit')
+            # title
+            f"{seqn} {o.title}",
+            # pagenum： -1 是因为逻辑页码从 1 开始，而 PyPDF2 对页码的索引从 0 开始
+            # offset = 物理页码 - 逻辑页码
+            # 逻辑页码表示这是正文中的第几页，物理页码则表示这是第几张纸
+            o.index + offset - 1,
+            # parent
+            parent,
+            #color
+            None,
+            #bold
+            False,
+            #italic
+            False,
+            #fit
+            '/Fit')
 
         if o.indent > stack[-1].indent:
             stack.append(o)

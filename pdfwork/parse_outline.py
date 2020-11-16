@@ -144,16 +144,8 @@ def outline_decode(text: str) -> Outline:
 def outline_encode(root: Outline) -> str:
     """将大纲树编码为源码表示。
     """
-    def flatten(array: List[Outline], o: Outline):
-        if o.children:
-            array.append(o)
-            for i in o.children:
-                flatten(array, i)
-        else:
-            array.append(o)
-
     linear_outlines = []
-    flatten(linear_outlines, root)
+    flatten_outline(linear_outlines, root)
     buf = StringIO()
     # 排除 ROOT
     for oi in linear_outlines[1:]:
@@ -161,6 +153,15 @@ def outline_encode(root: Outline) -> str:
     buf.seek(0, 0)
     text = buf.read()
     return text
+
+
+def flatten_outline(array: List[Outline], o: Outline):
+    if o.children:
+        array.append(o)
+        for i in o.children:
+            flatten_outline(array, i)
+    else:
+        array.append(o)
 
 
 def parse_line(
