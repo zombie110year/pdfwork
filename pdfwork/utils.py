@@ -3,8 +3,7 @@ from typing import *
 
 from PyPDF2.pdf import Destination, PdfFileReader, PdfFileWriter
 
-if TYPE_CHECKING:
-    from .outline import OutlineTuple
+from .outline import OutlineTuple
 
 __all__ = ("open_pdf", "export_outline")
 
