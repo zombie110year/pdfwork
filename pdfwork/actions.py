@@ -35,7 +35,7 @@ def action_merge(inputs: List[str], output: str):
 
     for path in paths:
         pdfr = Pdf.open(path)
-        pdfw.extends(pdfr.pages)
+        pdfw.pages.extend(pdfr.pages)
         pdfr.close()
 
     pdfw.save(output, linearize=True)
