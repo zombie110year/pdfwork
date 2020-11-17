@@ -20,14 +20,16 @@ Outline 的表示法可分为三个部分：
 import re
 from dataclasses import dataclass
 from io import StringIO
-from typing import *
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from .exceptions import OutlineParseError
 
 __all__ = ("outline_encode", "outline_decode", "Outline")
 
 
-class Outline:
+class Outline():
     """一条大纲：
 
     + :param int indent: 此大纲的缩进级别，从 0 开始
@@ -70,13 +72,19 @@ class Outline:
 
     def last_node(self, level: int = -1) -> "Outline":
         """返回最后添加的缩进等级为 ``level`` 的节点， -1 表示根节点。
+        如果数值过大，则只会返回最高等级的节点。
         """
         if level == -1:
             return self
         else:
             stack = [self]
             for _ in range(level + 1):
-                stack.append(stack[-1].last_children())
+                _kid = stack[-1].last_children()
+                if _kid:
+                    kid: Outline = _kid
+                    stack.append(kid)
+                else:
+                    break
             return stack[-1]
 
     def last_children(self) -> Optional["Outline"]:
@@ -85,15 +93,14 @@ class Outline:
         else:
             return None
 
-    def __eq__(self, o: "Outline") -> bool:
+    def __eq__(self, o: "Outline") -> bool:  # type: ignore
         if all([
                 self.indent == o.indent, self.title == o.title,
                 self.index == o.index
         ]):
             if len(self.children) == len(self.children):
                 return all([a == b for a, b in zip(self.children, o.children)])
-        else:
-            return False
+        return False
 
 
 @dataclass
@@ -142,7 +149,7 @@ def outline_decode(text: str) -> Outline:
 def outline_encode(root: Outline) -> str:
     """将大纲树编码为源码表示。
     """
-    linear_outlines = []
+    linear_outlines: List[Outline] = []
     flatten_outline(linear_outlines, root)
     buf = StringIO()
     # 排除 ROOT
@@ -185,7 +192,9 @@ def parse_line(
         indent_pat = m[0] if m else None
 
     if indent_pat:
-        indent = re.match(r"^( +|\t+)?", line)[0].count(indent_pat)
+        # 可以匹配空字符串，因此不可能为 None
+        indent = re.match(r"^( +|\t+)?",
+                          line)[0].count(indent_pat)  # type: ignore
         remain = line.lstrip(indent_pat * indent)
     else:
         indent = 0

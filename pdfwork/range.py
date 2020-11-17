@@ -20,7 +20,10 @@
     3,2:4 => [3, 2, 3]
 """
 import re
-from typing import *
+from typing import Iterable
+from typing import Iterator
+from typing import List
+from typing import Union
 
 
 class RangeParseError(Exception):

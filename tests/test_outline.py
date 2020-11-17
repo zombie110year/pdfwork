@@ -63,6 +63,7 @@ def test_outline_decode():
     print(f"{out!r}")
     assert tree == out
 
+
 def test_outline_decode_tab():
     src = "".join(test_str).replace("    ", "\t")
     print(f"{src!r}")

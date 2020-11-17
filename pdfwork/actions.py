@@ -1,16 +1,19 @@
 from pathlib import Path
 from sys import stdin
-from typing import *
+from typing import List
+from typing import Optional
 
-from pikepdf import Pdf
-from tqdm import tqdm
+# mypy 无法导入类型声明
+from pikepdf import Pdf  # type: ignore
+from tqdm import tqdm  # type: ignore
 from tqdm import trange
 
-from .outline import *
-from .range import *
+from .outline import Outline
+from .outline import outline_decode
+from .outline import outline_encode
 from .utils import check_paths_exists
 from .utils import export_outline
-from .utils import get_fmt_pat
+from .utils import fmt_pat
 from .utils import import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
@@ -20,7 +23,10 @@ __all__ = ("action_merge", "action_split", "action_import_outline",
 def action_merge(inputs: List[str], output: str):
     """合并一系列 PDF 文件。
 
-    :param input: 当输入一组路径时，按照顺序合并对应的文件；当输入以 ``@`` 开头的文件名（如 ``@files.txt``）时，从 `@files.txt` 读取文件路径并按顺序合并；当为 None 时，从 stdin 读取文件路径并按顺序合并。
+    :param input: 当输入一组路径时，按照顺序合并对应的文件；
+        当输入以 ``@`` 开头的文件名（如 ``@files.txt``）时，
+        从 `@files.txt` 读取文件路径并按顺序合并；
+        当为 None 时，从 stdin 读取文件路径并按顺序合并。
     :param output: 输出路径。
 
     **注意** ：书签会丢失，如果想要保留，需提前导出备份，见 :meth:`action_export_outline`。
@@ -50,13 +56,17 @@ def action_split(input: str, outputs: Optional[str]):
     """一个分割任务。
 
     :param input: 输入文件的路径
-    :param str outputs: 输出路径。可使用 Python format 模板格式化页码。如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。例如，假设文件有超过 100 但不足 1000 页时，将格式化为 ``{:03d}.pdf``。默认输出到当前文件夹
+    :param str outputs: 输出路径。可使用 Python format 模板格式化页码。
+        如果只提供目录名（如 ``out/``），则会自动推导文件名格式化样式。
+        例如，假设文件有超过 100 但不足 1000 页时，
+        将格式化为 ``{:03d}.pdf``。默认输出到当前文件夹
 
     **注意** ：书签、标记等可能会遗失。
     """
     pdfr: Pdf = Pdf.open(input)
 
-    fmt = get_fmt_pat(outputs, len(pdfr.pages))
+    fmt = fmt_pat(outputs, len(pdfr.pages)) if outputs else fmt_pat(
+        "", len(pdfr.pages))
 
     for i, page in enumerate(tqdm(pdfr.pages, ascii=True, desc=f"拆分 {fmt!r}")):
         pdfw: Pdf = Pdf.new()
@@ -77,8 +87,10 @@ def action_import_outline(pdf: str,
 
     :param str pdf: 要导入的 PDF 文件的路径。
     :param Optional[str] input: 记录目录信息的文本文件，如果为 None 则从 stdin 读取。
-    :param int offset: 页码的偏移量，默认为 0；这个参数是为了弥补照抄书籍目录页时，
-        由于前方页数未计算在内的造成的偏移。一般设置为目录页中标记为第一页的页面在 PDF 阅读器中的实际页码。
+    :param int offset: 页码的偏移量，默认为 0；
+        这个参数是为了弥补照抄书籍目录页时，
+        由于前方页数未计算在内的造成的偏移。
+        一般设置为目录页中标记为第一页的页面在 PDF 阅读器中的实际页码。
 
     目录信息将具有以下格式::
 
@@ -88,7 +100,7 @@ def action_import_outline(pdf: str,
     **注意** ： 页码是在书籍目录页中书写的页码，一般从 1 开始。如果有一行没有标注页码，那么会继承上一行的页码。
     """
     if input is None:
-        outline_src = sys.stdin.read()
+        outline_src = stdin.read()
     else:
         with open(input, "rt", encoding="utf-8") as src:
             outline_src = src.read()
