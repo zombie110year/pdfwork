@@ -1,8 +1,10 @@
+import re
 from pathlib import Path
 from sys import stdin
 from typing import *
 
 from pikepdf import Pdf
+from tqdm import tqdm, trange
 
 from .outline import *
 from .range import *
@@ -33,7 +35,7 @@ def action_merge(inputs: List[str], output: str):
 
     pdfw: Pdf = Pdf.new()
 
-    for path in paths:
+    for path in trange(paths, ascii=True, desc="组合"):
         pdfr = Pdf.open(path)
         pdfw.pages.extend(pdfr.pages)
         pdfr.close()
@@ -53,7 +55,7 @@ def action_split(input: str, outputs: Optional[str]):
 
     fmt = get_fmt_pat(outputs, len(pdfr.pages))
 
-    for i, page in enumerate(pdfr.pages):
+    for i, page in enumerate(tqdm(pdfr.pages, ascii=True, desc=f"拆分 {fmt!r}")):
         pdfw: Pdf = Pdf.new()
         pdfw.pages.append(page)
 
