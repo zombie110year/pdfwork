@@ -19,16 +19,15 @@ pdfwork = "pdfwork.cli:cli_main"
 "Bug Tracker" = "https://github.com/zombie110year/pdfwork/issues"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.9"
 pikepdf = "^2.0.0"
 more-itertools = "^8.3.0"
 tqdm = "^4.52.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-yapf = "^0.29.0"
-isort = "^4.3.21"
-mypy = "^0.780"
+pytest = "^6"
+yapf = "^0.30.0"
+isort = "^5"
 
 [[tool.poetry.source]]
 url = "https://mirrors.aliyun.com/pypi/simple"
