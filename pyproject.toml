@@ -26,6 +26,8 @@ tqdm = "^4.52.0"
 pytest = "^6"
 yapf = "^0.30.0"
 isort = "^5"
+flake8 = "^3.8.4"
+mypy = "^0.790"
 
 [[tool.poetry.source]]
 url = "https://mirrors.aliyun.com/pypi/simple"

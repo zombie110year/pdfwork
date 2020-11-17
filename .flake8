@@ -1,0 +1,11 @@
+# https://flake8.pycqa.org/en/latest/user/configuration.html
+[flake8]
+# 一行 120 个字符
+max-line-length = 119
+max-doc-length = 119
+
+# 显示导致问题的源代码
+show-source = True
+
+# 显示错误统计
+statistics = True
