@@ -1,6 +1,7 @@
 """PdfWork 的命令行入口
 """
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
+from argparse import Namespace
 from typing import *
 
 from . import __version__

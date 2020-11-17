@@ -1,14 +1,17 @@
-import re
 from pathlib import Path
 from sys import stdin
 from typing import *
 
 from pikepdf import Pdf
-from tqdm import tqdm, trange
+from tqdm import tqdm
+from tqdm import trange
 
 from .outline import *
 from .range import *
-from .utils import check_paths_exists, export_outline, get_fmt_pat, import_outline
+from .utils import check_paths_exists
+from .utils import export_outline
+from .utils import get_fmt_pat
+from .utils import import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
            "action_export_outline", "action_erase_outline")

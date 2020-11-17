@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import *
 
 from pikepdf import Outline as PikeOutline
-from pikepdf import OutlineItem, Pdf
+from pikepdf import OutlineItem
+from pikepdf import Pdf
 
 from .outline import Outline
 

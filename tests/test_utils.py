@@ -1,5 +1,6 @@
-from pdfwork.utils import get_fmt_pat
 import pytest
+
+from pdfwork.utils import get_fmt_pat
 
 
 @pytest.mark.parametrize("pat, expect", [

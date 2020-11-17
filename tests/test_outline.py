@@ -1,7 +1,9 @@
 "测试解析目录的能力"
 import pytest
 
-from pdfwork.outline import parse_line, outline_decode, Outline
+from pdfwork.outline import Outline
+from pdfwork.outline import outline_decode
+from pdfwork.outline import parse_line
 
 test_str = [
     "晶体与晶体学 @ 1\n",
