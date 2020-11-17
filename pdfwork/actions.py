@@ -1,12 +1,14 @@
+import re
 from pathlib import Path
 from sys import stdin
 from typing import *
 
 from pikepdf import Pdf
+from tqdm import tqdm, trange
 
 from .outline import *
 from .range import *
-from .utils import check_paths_exists, export_outline, import_outline
+from .utils import check_paths_exists, export_outline, get_fmt_pat, import_outline
 
 __all__ = ("action_merge", "action_split", "action_import_outline",
            "action_export_outline", "action_erase_outline")
@@ -33,9 +35,9 @@ def action_merge(inputs: List[str], output: str):
 
     pdfw: Pdf = Pdf.new()
 
-    for path in paths:
+    for path in trange(paths, ascii=True, desc="组合"):
         pdfr = Pdf.open(path)
-        pdfw.extends(pdfr.pages)
+        pdfw.pages.extend(pdfr.pages)
         pdfr.close()
 
     pdfw.save(output, linearize=True)
@@ -51,20 +53,14 @@ def action_split(input: str, outputs: Optional[str]):
     """
     pdfr: Pdf = Pdf.open(input)
 
-    if outputs is None:
-        max_num = len(pdfr.pages)
-        width = sum(
-            [1 for i in range(max_num) if (max_num := max_num // 10) != 0]) + 1
-        fmt = f"{{:0{width}d}}.pdf"
-    else:
-        fmt = outputs
+    fmt = get_fmt_pat(outputs, len(pdfr.pages))
 
-    for i, page in enumerate(pdfr.pages):
+    for i, page in enumerate(tqdm(pdfr.pages, ascii=True, desc=f"拆分 {fmt!r}")):
         pdfw: Pdf = Pdf.new()
         pdfw.pages.append(page)
 
         path = Path(fmt.format(i))
-        path.mkdir(parents=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         pdfw.save(path, linearize=True)
 
     pdfr.close()

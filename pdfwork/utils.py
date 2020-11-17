@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import *
 
@@ -121,3 +122,31 @@ def check_paths_exists(paths: List[str]) -> List[str]:
         return valid
     else:
         raise FileNotFoundError(invalid)
+
+def get_fmt_pat(pat: str, maxn: int) -> str:
+    # 有无 .pdf {}
+    # (.pdf, {}) => 文件（可能需要父目录），按指定样式序列化
+    # (.pdf, _) => 文件，在后缀按默认样式序列化
+    # (_, {}) => 按指定样式序列化目录，然后每个目录下按默认样式序列化
+    # (_, _) => 指定目录下的默认序列化
+    if pat is None:
+        width = sum(
+            [1 for i in range(maxn) if (maxn := maxn // 10) != 0]) + 1
+        fmt = f"{{0:0{width}d}}.pdf"
+    else:
+        have_pdf = pat.endswith(".pdf")
+        have_fmt = re.match(r"{.*?[dxob]?}", pat)
+
+        width = sum(
+            [1 for i in range(maxn) if (maxn := maxn // 10) != 0]) + 1
+
+        if have_pdf and have_fmt:
+            fmt = pat
+        elif have_pdf and not have_fmt:
+            fmt = pat.replace(".pdf", f"{{0:0{width}d}}.pdf")
+        elif not have_pdf and have_fmt:
+            fmt = (Path(pat) / f"{{0:0{width}d}}.pdf").as_posix()
+        else:
+            fmt = (Path(pat) / f"{{0:0{width}d}}.pdf").as_posix()
+
+    return fmt
