@@ -6,7 +6,6 @@ from typing import Optional
 # mypy 无法导入类型声明
 from pikepdf import Pdf  # type: ignore
 from tqdm import tqdm  # type: ignore
-from tqdm import trange
 
 from .outline import Outline
 from .outline import outline_decode
@@ -44,7 +43,7 @@ def action_merge(inputs: List[str], output: str):
 
     pdfw: Pdf = Pdf.new()
 
-    for path in trange(paths, ascii=True, desc="组合"):
+    for path in tqdm(paths, desc="合并", ascii=True):
         pdfr = Pdf.open(path)
         pdfw.pages.extend(pdfr.pages)
         pdfr.close()
