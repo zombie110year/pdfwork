@@ -1,5 +1,6 @@
-from pdfwork.utils import get_fmt_pat
 import pytest
+
+from pdfwork.utils import fmt_pat
 
 
 @pytest.mark.parametrize("pat, expect", [
@@ -9,4 +10,4 @@ import pytest
     ("dir", "dir/{0:04d}.pdf"),
 ])
 def test_fmt_pat(pat, expect):
-    assert get_fmt_pat(pat, 1000) == expect
+    assert fmt_pat(pat, 1000) == expect

@@ -1,9 +1,13 @@
 import re
 from pathlib import Path
-from typing import *
+from typing import Callable
+from typing import List
+from typing import Optional
 
-from pikepdf import Outline as PikeOutline
-from pikepdf import OutlineItem, Pdf
+# mypy 无法导入类型声明
+from pikepdf import Outline as PikeOutline  # type: ignore
+from pikepdf import OutlineItem
+from pikepdf import Pdf
 
 from .outline import Outline
 
@@ -24,6 +28,7 @@ def export_outline(pdf: Pdf, pike: PikeOutline) -> Outline:
             # 374 页，第 12.3.2.2 章
             pageid = oi.destination[0].to_json().decode()
             pn = pn_map(pageid)
+            pn = pn if pn else 0
             o = Outline(level, oi.title, pn + 1)
             root.add_node(o, o.indent)
             tree_copy(oi.children, level + 1)
@@ -123,23 +128,23 @@ def check_paths_exists(paths: List[str]) -> List[str]:
     else:
         raise FileNotFoundError(invalid)
 
-def get_fmt_pat(pat: str, maxn: int) -> str:
+
+def fmt_pat(pat: Optional[str], maxn: int) -> str:
     # 有无 .pdf {}
     # (.pdf, {}) => 文件（可能需要父目录），按指定样式序列化
     # (.pdf, _) => 文件，在后缀按默认样式序列化
     # (_, {}) => 按指定样式序列化目录，然后每个目录下按默认样式序列化
     # (_, _) => 指定目录下的默认序列化
+
+    width = sum([
+        1 for _ in range(maxn) if (maxn := maxn // 10) != 0  # type: ignore
+    ]) + 1
+
     if pat is None:
-        width = sum(
-            [1 for i in range(maxn) if (maxn := maxn // 10) != 0]) + 1
         fmt = f"{{0:0{width}d}}.pdf"
     else:
         have_pdf = pat.endswith(".pdf")
         have_fmt = re.match(r"{.*?[dxob]?}", pat)
-
-        width = sum(
-            [1 for i in range(maxn) if (maxn := maxn // 10) != 0]) + 1
-
         if have_pdf and have_fmt:
             fmt = pat
         elif have_pdf and not have_fmt:

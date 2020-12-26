@@ -1,10 +1,15 @@
 """PdfWork 的命令行入口
 """
-from argparse import ArgumentParser, Namespace
-from typing import *
+from argparse import ArgumentParser
+from argparse import Namespace
+from typing import Optional
 
 from . import __version__
-from .actions import *
+from .actions import action_erase_outline
+from .actions import action_export_outline
+from .actions import action_import_outline
+from .actions import action_merge
+from .actions import action_split
 
 __all__ = ("cli_main", )
 

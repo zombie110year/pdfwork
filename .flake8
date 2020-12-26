@@ -1,0 +1,15 @@
+# https://flake8.pycqa.org/en/latest/user/configuration.html
+[flake8]
+# note 如果配置文件不生效，可能是因为 flake8 在 Windows 上以 gbk 编码读取了配置
+#      文件导致编码错误而无法加载配置，但 flake8 忽略了此错误，以空配置状态继续
+#      运行。解决此办法可以设环境变量 PYTHONUTF8 = 1
+
+# 一行 120 个字符
+max-line-length = 119
+max-doc-length = 119
+
+# 显示导致问题的源代码
+show-source = True
+
+# 显示错误统计
+statistics = True

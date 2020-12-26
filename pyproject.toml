@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pdfwork"
-version = "0.3.1"
+version = "0.3.2"
 description = "基于 pikepdf 封装的命令行工具，处理 PDF 文件用"
 authors = ["zombie110year <zombie110year@outlook.com>"]
 readme = "README.rst"
@@ -8,12 +8,10 @@ license = "MIT"
 homepage = "https://github.com/zombie110year/pdfwork"
 repository = "https://github.com/zombie110year/pdfwork.git"
 packages = [{ include = "pdfwork" }]
-exclude = ["debug.py"]
+classifiers = ["Environment :: Console"]
 
 [tool.poetry.scripts]
 pdfwork = "pdfwork.cli:cli_main"
-# alias pw='pdfwork'
-# pw = "pdfwork.cli:cli_main"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/zombie110year/pdfwork/issues"
@@ -28,11 +26,17 @@ tqdm = "^4.52.0"
 pytest = "^6"
 yapf = "^0.30.0"
 isort = "^5"
+flake8 = "^3.8.4"
+mypy = "^0.790"
 
 [[tool.poetry.source]]
 url = "https://mirrors.aliyun.com/pypi/simple"
 name = "aliyun"
 default = true
+
+[tool.isort]
+src_paths = ["pdfwork", "tests"]
+force_single_line = true
 
 [build-system]
 requires = ["poetry>=0.12"]
