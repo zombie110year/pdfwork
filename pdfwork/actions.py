@@ -3,6 +3,7 @@ from sys import stdin
 from typing import List
 from typing import Optional
 
+import typer
 # mypy 无法导入类型声明
 from pikepdf import Pdf  # type: ignore
 from tqdm import tqdm  # type: ignore
@@ -48,7 +49,14 @@ def action_merge(inputs: List[str], output: str):
         pdfw.pages.extend(pdfr.pages)
         pdfr.close()
 
-    pdfw.save(output, linearize=True)
+    try:
+        pdfw.save(output, linearize=True)
+    except RuntimeError as e:
+        typer.secho("ERROR: {}, inputs={}, output={}".format(
+            e, inputs, output),
+                    fg="red",
+                    err=True)
+        raise e
 
 
 def action_split(input: str, outputs: Optional[str]):
@@ -73,7 +81,17 @@ def action_split(input: str, outputs: Optional[str]):
 
         path = Path(fmt.format(i))
         path.parent.mkdir(parents=True, exist_ok=True)
-        pdfw.save(path, linearize=True)
+
+        try:
+            pdfw.save(path, linearize=True)
+        except RuntimeError as e:
+            # ERROR: operation for name attempted on object of type string
+            # 是 PDF 内容的问题，见 https://github.com/qpdf/qpdf/issues/74
+            typer.secho("ERROR: {}, input={}, outputs={}".format(
+                e, input, fmt),
+                        fg="red",
+                        err=True)
+            raise e
 
     pdfr.close()
 
@@ -107,7 +125,14 @@ def action_import_outline(pdf: str,
 
     pdfw = Pdf.open(pdf, allow_overwriting_input=True)
     import_outline(pdfw, root, offset)
-    pdfw.save(output, linearize=True)
+    try:
+        pdfw.save(output, linearize=True)
+    except RuntimeError as e:
+        typer.secho("ERROR: {}, pdf={}, input={}, output={}, offset={}".format(
+            e, pdf, input, output, offset),
+                    fg="red",
+                    err=True)
+        raise e
 
 
 def action_export_outline(pdf: str, output: Optional[str]):
@@ -132,7 +157,7 @@ def action_export_outline(pdf: str, output: Optional[str]):
         with open(output, "wt", encoding="utf-8") as outbuf:
             outbuf.write(content)
     else:
-        print(content)
+        typer.echo_via_pager(content)
 
 
 def action_erase_outline(pdf: str, output: str):
@@ -146,4 +171,10 @@ def action_erase_outline(pdf: str, output: str):
     pdfw.pages.extend(pdfr.pages)
     pdfr.close()
 
-    pdfw.save(output, linearize=True)
+    try:
+        pdfw.save(output, linearize=True)
+    except RuntimeError as e:
+        typer.secho("ERROR: {}, pdf={}, output={}".format(e, pdf, output),
+                    fg="red",
+                    err=True)
+        raise e
