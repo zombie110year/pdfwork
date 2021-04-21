@@ -2,7 +2,7 @@
 PDFWork
 #######
 
-基于 [pikepdf](https://github.com/pikepdf/pikepdf) 封装的一个便于使用的 pdf 处理命令行工具。
+基于 `pikepdf <https://github.com/pikepdf/pikepdf>`_ 封装的一个便于使用的 pdf 处理命令行工具。
 提供以下功能：
 
 -   书签（也叫目录）
@@ -56,9 +56,9 @@ PDFWork
 拆分 PDF 文件
 -------------
 
-pdfwork 可以将一个完整的 PDF 文件按页拆分成单页 PDF。使用 ``-i origin.pdf`` 输入源文件路径。然后通过 ``-o prefix.%03d.pdf`` 设置输出文件名模板。
+pdfwork 可以将一个完整的 PDF 文件按页拆分成单页 PDF。使用 ``-i origin.pdf`` 输入源文件路径。然后通过 ``-o prefix.{:03d}.pdf`` 设置输出文件名模板。
 
-可以在模板中使用 Python format 风格的占位符（详见 <https://docs.python.org/zh-cn/3/library/string.html#formatspec>），例如 ``{:d}`` 或 ``{:04d}`` 之类，像十六进制的 ``{:x}``、八进制的 ``{:o}`` 和二进制的 ``{:b}`` 也是可以使用的。
+可以在模板中使用 Python format 风格的占位符（详见 `https://docs.python.org/zh-cn/3/library/string.html#formatspec`_），例如 ``{:d}`` 或 ``{:04d}`` 之类，像十六进制的 ``{:x}``、八进制的 ``{:o}`` 和二进制的 ``{:b}`` 也是可以使用的。
 
 当 ``-o`` 参数未指定时，程序会使用类似于 ``{:0d}.pdf`` 这样的模板，但自动推导宽度，以确保生成 001.pdf ~ 999.pdf 样式的文件。
 
@@ -85,9 +85,9 @@ pdfwork 提供一种字面形式的书签描述语言，可以描述书签的标
 
 .. code:: sh
 
-    $ pdfwork outline --pdf origin.pdf import -i bookmarks.txt -o origin.bookmarked.pdf --offset 20
+    $ pdfwork outline import origin.pdf -i bookmarks.txt -o origin.bookmarked.pdf --offset 20
 
-    $ pdfwork outline --pdf origin.pdf export -o bookmarks.exported.txt
+    $ pdfwork outline export origin.pdf -o bookmarks.exported.txt
 
 在导入时，通常需要输入一个参数 ``--offset``，这个参数表示正文页码和物理页码的偏差。例如，大多数书籍都有封面、扉页、前言、目录等结构，这些结构并没有算在目录的页码里。因此，当从书籍的目录中将页码转抄过来，就会存在一个值为 offset 的偏差。假设正文第 1 页在 PDF 中的实际页码是 21，那么 offset = 21 - 1 = 20。如果所操作的书籍没有此类问题，那么可以省略此参数，令程序使用默认值 offset = 0 。另外，程序会自动生成序号。
 
@@ -102,4 +102,4 @@ pdfwork 提供一种字面形式的书签描述语言，可以描述书签的标
 
 .. code:: sh
 
-    $ pdfwork outline --pdf origin.pdf erase -o erased.pdf
+    $ pdfwork outline erase origin.pdf -o erased.pdf
