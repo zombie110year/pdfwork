@@ -84,6 +84,7 @@ def export_outline(pdf: str = typer.Argument(..., help="PDF 文件路径"),
                        "-o",
                        help="输出书签文本文件的路径，默认输出到 stdout",
                        metavar="PATH")):
+    "将 PDF 中的书签导出为文本格式"
     return action_export_outline(pdf, out)
 
 
