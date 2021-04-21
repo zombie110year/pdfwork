@@ -34,18 +34,12 @@ PDFWork
 
 1. 直接在命令行中输入： ``-i alpha.pdf beta.pdf gamma.pdf``
 2. 在以 ``@`` 开头的文本文件（例如 ``@pdf.list.txt``）中以 **每行一个** 的形式编写 PDF 片段的路径，然后用 ``-i @pdf.list.txt`` 的形式指定列表文件。程序会在指定文件中读取 PDF 片段的路径。
-3. 或者留空，这样会从 stdin 读取文件路径，同样是每行一个。
 
 .. code:: sh
 
-    $ pdfwork merge -o merged.pdf -i a.pdf b.pdf c.pdf
+    $ pdfwork merge -o merged.pdf a.pdf b.pdf c.pdf
 
-    $ pdfwork merge -o merged.pdf -i @abc.list.txt
-
-    $ pdfwork merge -o
-    a.pdf
-    b.pdf
-    c.pdf
+    $ pdfwork merge -o merged.pdf @abc.list.txt
 
 ``@abc.list.txt`` 的内容如下::
 
@@ -64,7 +58,7 @@ pdfwork 可以将一个完整的 PDF 文件按页拆分成单页 PDF。使用 ``
 
 .. code:: sh
 
-    $ pdfwork split -i origin.pdf -o "origin.{:04d}.pdf"
+    $ pdfwork split origin.pdf -o "origin.{:04d}.pdf"
 
 导入导出 PDF 文件的书签
 -----------------------
