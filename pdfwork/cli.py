@@ -2,8 +2,8 @@
 """
 from typing import List
 from typing import Optional
-import pikepdf
 
+import pikepdf
 import typer
 
 from . import __version__
@@ -11,6 +11,7 @@ from .actions import action_erase_outline
 from .actions import action_export_outline
 from .actions import action_import_outline
 from .actions import action_merge
+from .actions import action_optimize
 from .actions import action_split
 
 __all__ = ("cli_main", )
@@ -84,3 +85,10 @@ def export_outline(pdf: str = typer.Argument(..., help="PDF 文件路径"),
                        help="输出书签文本文件的路径，默认输出到 stdout",
                        metavar="PATH")):
     return action_export_outline(pdf, out)
+
+
+@cli_main.command()
+def optimize(pdf: str = typer.Argument(..., help="PDF 文件路径"),
+             output: Optional[str] = typer.Option(None, "-o", help="输出路径")):
+    "优化 PDF 文件：线性化、压缩、去除未引用资源"
+    action_optimize(pdf, output)

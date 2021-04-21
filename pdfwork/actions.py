@@ -178,3 +178,25 @@ def action_erase_outline(pdf: str, output: str):
                     fg="red",
                     err=True)
         raise e
+
+
+def action_optimize(src: str, output: Optional[str] = None):
+    """优化 PDF 文件：线性化、压缩、去除未引用资源
+
+    :param str src: 被处理的 PDF 文件路径
+    :param str output: 输出路径，为 Nohene 则保存至原文档加 ``_`` 后缀的 PDF 文件
+    """
+    src_ = Path(src)
+    stem = src_.stem
+    parent = src_.parent
+    output = (parent / "{}_.pdf".format(stem)
+              ).as_posix() if (output is None) or (output == src) else output
+    pdf = Pdf.open(src)
+    pdf.remove_unreferenced_resources()
+    try:
+        pdf.save(output, linearize=True)
+    except RuntimeError as e:
+        typer.secho("ERROR: {}, src={}, output={}".format(e, src, output),
+                    fg="red",
+                    err=True)
+        raise e
