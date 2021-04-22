@@ -91,5 +91,5 @@ def export_outline(pdf: str = typer.Argument(..., help="PDF 文件路径"),
 @cli_main.command()
 def optimize(pdf: str = typer.Argument(..., help="PDF 文件路径"),
              output: Optional[str] = typer.Option(None, "-o", help="输出路径")):
-    "优化 PDF 文件：线性化、压缩、去除未引用资源"
+    "优化 PDF 文件：线性化、去重、去除未引用资源"
     action_optimize(pdf, output)

@@ -1,7 +1,10 @@
+from hashlib import md5 as get_hash
 from pathlib import Path
 from sys import stdin
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import typer
 # mypy 无法导入类型声明
@@ -181,7 +184,7 @@ def action_erase_outline(pdf: str, output: str):
 
 
 def action_optimize(src: str, output: Optional[str] = None):
-    """优化 PDF 文件：线性化、压缩、去除未引用资源
+    """优化 PDF 文件：线性化、去重、去除未引用资源
 
     :param str src: 被处理的 PDF 文件路径
     :param str output: 输出路径，为 Nohene 则保存至原文档加 ``_`` 后缀的 PDF 文件
@@ -192,6 +195,35 @@ def action_optimize(src: str, output: Optional[str] = None):
     output = (parent / "{}_.pdf".format(stem)
               ).as_posix() if (output is None) or (output == src) else output
     pdf = Pdf.open(src)
+
+    # 来自讨论 https://github.com/pikepdf/pikepdf/issues/198
+    # hex hash => [(page number, object name)]
+    image_hash: Dict[str, List[Tuple[int, str]]] = {}
+
+    progress1 = tqdm(desc="查重")
+    # 构建引用表
+    for p in range(len(pdf.pages)):
+        for im in pdf.pages[p].images.keys():
+            # must record in image_hash
+            obj = pdf.pages[p].images[im]
+            hashsum = get_hash(obj.read_bytes()).hexdigest()
+            if hashsum in image_hash:
+                image_hash[hashsum].append((p, im))
+            else:
+                image_hash[hashsum] = [(p, im)]
+            progress1.update()
+    progress1.close()
+
+    progress2 = tqdm(desc="去重", total=progress1.n - len(image_hash.keys()))
+    # 将图像指向具有相同 hash 的第一个图像
+    for first, *others in image_hash.values():
+        p0, im0 = first
+        for p, im in others:
+            pdf.pages[p].Resources.XObject[im] = pdf.pages[
+                p0].Resources.XObject[im0]
+            progress2.update()
+    progress2.close()
+
     pdf.remove_unreferenced_resources()
     try:
         pdf.save(output, linearize=True)
